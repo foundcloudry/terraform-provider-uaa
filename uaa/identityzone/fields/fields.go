@@ -60,7 +60,7 @@ func (s IdentityZoneField) String() string {
 	case MfaIdentityProviders:
 		return "mfa_identity_providers"
 	case Name:
-		return "id"
+		return "name"
 	case SamlConfig:
 		return "saml_config"
 	case SelfServeEnabled:
