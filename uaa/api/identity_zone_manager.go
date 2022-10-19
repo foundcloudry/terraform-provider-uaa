@@ -1,10 +1,13 @@
 package api
 
 import (
+	"bytes"
 	"code.cloudfoundry.org/cli/cf/configuration/coreconfig"
+	"code.cloudfoundry.org/cli/cf/errors"
 	"code.cloudfoundry.org/cli/cf/net"
-	"errors"
+	"encoding/json"
 	"fmt"
+	"net/url"
 )
 
 type IdentityZoneManager struct {
@@ -25,6 +28,25 @@ func newIdentityZoneManager(config coreconfig.Reader, uaaGateway net.Gateway, lo
 
 // CRUD methods
 
+func (api *IdentityZoneManager) Create(identityZone *IdentityZone) (*IdentityZone, error) {
+
+	uaaEndpoint := api.config.UaaEndpoint()
+	if len(uaaEndpoint) == 0 {
+		return nil, errors.New("UAA endpoint missing from config file")
+	}
+
+	body, err := json.Marshal(identityZone)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := api.uaaGateway.CreateResource(uaaEndpoint, "/identity-zones", bytes.NewReader(body), &identityZone); err != nil {
+		return nil, err
+	}
+
+	return identityZone, nil
+}
+
 func (api *IdentityZoneManager) FindById(id string) (*IdentityZone, error) {
 
 	uaaEndpoint := api.config.UaaEndpoint()
@@ -42,42 +64,96 @@ func (api *IdentityZoneManager) FindById(id string) (*IdentityZone, error) {
 	return identityZone, nil
 }
 
+func (api *IdentityZoneManager) FindByName(name string) (*IdentityZone, error) {
+
+	uaaEndpoint := api.config.UaaEndpoint()
+	if len(uaaEndpoint) == 0 {
+		return nil, errors.New("UAA endpoint missing from config file")
+	}
+
+	displayNameFilter := url.QueryEscape(fmt.Sprintf(`name Eq "%s"`, name))
+	path := fmt.Sprintf("%s/identity-zones?filter=%s", uaaEndpoint, displayNameFilter)
+
+	identityZones := &[]IdentityZone{}
+	err := api.uaaGateway.GetResource(path, identityZones)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, identityZone := range *identityZones {
+		if identityZone.Name == name {
+			return &identityZone, nil
+		}
+	}
+
+	return nil, errors.NewModelNotFoundError("Identity Zone", name)
+}
+
+func (api *IdentityZoneManager) Update(id string, identityZone *IdentityZone) (*IdentityZone, error) {
+
+	uaaEndpoint := api.config.UaaEndpoint()
+	if len(uaaEndpoint) == 0 {
+		return nil, errors.New("UAA endpoint missing from config file")
+	}
+
+	body, err := json.Marshal(identityZone)
+	if err != nil {
+		return nil, err
+	}
+
+	path := fmt.Sprintf("/identity-zones/%s", id)
+	if err := api.uaaGateway.UpdateResource(uaaEndpoint, path, bytes.NewReader(body), &identityZone); err != nil {
+		return nil, err
+	}
+
+	return identityZone, nil
+}
+
+func (api *IdentityZoneManager) Delete(id string) error {
+	uaaEndpoint := api.config.UaaEndpoint()
+	if len(uaaEndpoint) == 0 {
+		return errors.New("UAA endpoint missing from config file")
+	}
+
+	return api.uaaGateway.DeleteResource(uaaEndpoint, fmt.Sprintf("/identity-zones/%s", id))
+}
+
 // DTOs
 
 type IdentityZone struct {
-	Id        string             `json:"id"`
-	IsActive  bool               `json:"active"`
-	Name      string             `json:"name,omitempty"`
-	SubDomain string             `json:"subdomain,omitempty"`
-	Config    IdentityZoneConfig `json:"config,omitempty"`
+	Id        string              `json:"id"`
+	IsActive  bool                `json:"active"`
+	Name      string              `json:"name,omitempty"`
+	SubDomain string              `json:"subdomain,omitempty"`
+	Config    *IdentityZoneConfig `json:"config,omitempty"`
 }
 
 type IdentityZoneConfig struct {
-	AccountChooserEnabled bool                           `json:"accountChooserEnabled"`
-	ClientSecretPolicy    IdentityZoneClientSecretPolicy `json:"clientSecretPolicy,omitempty"`
-	CorsPolicy            IdentityZoneCorsPolicy         `json:"corsPolicy,omitempty"`
-	IdpDiscoveryEnabled   bool                           `json:"idpDiscoveryEnabled"`
-	InputPrompts          []InputPrompt                  `json:"prompts,omitempty"'`
-	IssuerUrl             string                         `json:"issuer,omitempty"`
-	Links                 IdentityZoneLinks              `json:"links,omitempty"`
-	MfaConfig             MfaConfig                      `json:"MfaConfig,omitempty"`
-	TokenPolicy           IdentityZoneTokenPolicy        `json:"tokenPolicy,omitempty"`
-	Saml                  IdentityZoneSamlConfig         `json:"samlConfig,omitempty"`
-	UserConfig            UserConfig                     `json:"userConfig,omitempty"`
+	AccountChooserEnabled bool                            `json:"accountChooserEnabled"`
+	ClientSecretPolicy    *IdentityZoneClientSecretPolicy `json:"clientSecretPolicy,omitempty"`
+	CorsPolicy            *IdentityZoneCorsPolicy         `json:"corsPolicy,omitempty"`
+	IdpDiscoveryEnabled   bool                            `json:"idpDiscoveryEnabled"`
+	InputPrompts          []*InputPrompt                  `json:"prompts,omitempty"'`
+	IssuerUrl             string                          `json:"issuer,omitempty"`
+	Links                 *IdentityZoneLinks              `json:"links,omitempty"`
+	MfaConfig             *MfaConfig                      `json:"MfaConfig,omitempty"`
+	TokenPolicy           *IdentityZoneTokenPolicy        `json:"tokenPolicy,omitempty"`
+	Saml                  *IdentityZoneSamlConfig         `json:"samlConfig,omitempty"`
+	UserConfig            *UserConfig                     `json:"userConfig,omitempty"`
 }
 
 type IdentityZoneClientSecretPolicy struct {
-	MaxLength             int64 `json:"maxLength,omitempty"`
-	MinLength             int64 `json:"minLength,omitempty"`
-	MinUpperCaseCharacter int64 `json:"requireUpperCaseCharacter,omitempty"`
-	MinLowerCaseCharacter int64 `json:"requireLowerCaseCharacter,omitempty"`
-	MinDigit              int64 `json:"requireDigit,omitempty"`
-	MinSpecialCharacter   int64 `json:"requireSpecialCharacter,omitempty"`
+	MaxLength             *int64 `json:"maxLength,omitempty"`
+	MinLength             *int64 `json:"minLength,omitempty"`
+	MinUpperCaseCharacter *int64 `json:"requireUpperCaseCharacter,omitempty"`
+	MinLowerCaseCharacter *int64 `json:"requireLowerCaseCharacter,omitempty"`
+	MinDigit              *int64 `json:"requireDigit,omitempty"`
+	MinSpecialCharacter   *int64 `json:"requireSpecialCharacter,omitempty"`
 }
 
 type IdentityZoneCorsPolicy struct {
-	DefaultConfiguration IdentityZoneCorsConfig `json:"defaultConfiguration,omitempty"`
-	XhrConfiguration     IdentityZoneCorsConfig `json:"xhrConfiguration,omitempty"`
+	DefaultConfiguration *IdentityZoneCorsConfig `json:"defaultConfiguration,omitempty"`
+	XhrConfiguration     *IdentityZoneCorsConfig `json:"xhrConfiguration,omitempty"`
 }
 
 type IdentityZoneCorsConfig struct {
@@ -88,12 +164,12 @@ type IdentityZoneCorsConfig struct {
 	AllowedHeaders        []string `json:"allowedHeaders,omitempty"`
 	AllowedMethods        []string `json:"allowedMethods,omitempty"`
 	AllowedCredentials    bool     `json:"allowedCredentials"`
-	MaxAge                int64    `json:"maxAge,omitempty"`
+	MaxAge                *int64   `json:"maxAge,omitempty"`
 }
 
 type IdentityZoneTokenPolicy struct {
-	AccessTokenTtl       int64  `json:"accessTokenValidity,omitempty"`
-	RefreshTokenTtl      int64  `json:"refreshTokenValidity,omitempty"`
+	AccessTokenTtl       *int64 `json:"accessTokenValidity,omitempty"`
+	RefreshTokenTtl      *int64 `json:"refreshTokenValidity,omitempty"`
 	IsJwtRevocable       bool   `json:"jwtRevocable"`
 	IsRefreshTokenUnique bool   `json:"refreshTokenUnique"`
 	RefreshTokenFormat   string `json:"refreshTokenFormat,omitempty"`
@@ -101,16 +177,16 @@ type IdentityZoneTokenPolicy struct {
 }
 
 type IdentityZoneSamlConfig struct {
-	ActiveKeyId              string                         `json:"activeKeyId,omitempty"`
-	AssertionTtlSeconds      int64                          `json:"assertionTimeToLiveSeconds,omitempty"`
-	Certificate              string                         `json:"certificate,omitempty"`
-	DisableInResponseToCheck bool                           `json:"disableInResponseToCheck"`
-	EntityId                 string                         `json:"entityID,omitempty"`
-	IsAssertionSigned        bool                           `json:"assertionSigned"`
-	IsRequestSigned          bool                           `json:"requestSigned"`
-	Keys                     map[string]IdentityZoneSamlKey `json:"keys,omitempty"`
-	WantAssertionSigned      bool                           `json:"wantAssertionSigned"`
-	WantAuthnRequestSigned   bool                           `json:"wantAuthnRequestSigned"`
+	ActiveKeyId              string                          `json:"activeKeyId,omitempty"`
+	AssertionTtlSeconds      *int64                          `json:"assertionTimeToLiveSeconds,omitempty"`
+	Certificate              string                          `json:"certificate,omitempty"`
+	DisableInResponseToCheck bool                            `json:"disableInResponseToCheck"`
+	EntityId                 string                          `json:"entityID,omitempty"`
+	IsAssertionSigned        bool                            `json:"assertionSigned"`
+	IsRequestSigned          bool                            `json:"requestSigned"`
+	Keys                     map[string]*IdentityZoneSamlKey `json:"keys,omitempty"`
+	WantAssertionSigned      bool                            `json:"wantAssertionSigned"`
+	WantAuthnRequestSigned   bool                            `json:"wantAuthnRequestSigned"`
 }
 
 type IdentityZoneSamlKey struct {
@@ -118,9 +194,9 @@ type IdentityZoneSamlKey struct {
 }
 
 type IdentityZoneLinks struct {
-	HomeRedirect string                  `json:"homeRedirect,omitempty"`
-	Logout       IdentityZoneLogoutLinks `json:"logout,omitempty"`
-	SelfService  SelfServiceLinks        `json:"selfService,omitempty"`
+	HomeRedirect string                   `json:"homeRedirect,omitempty"`
+	Logout       *IdentityZoneLogoutLinks `json:"logout,omitempty"`
+	SelfService  *SelfServiceLinks        `json:"selfService,omitempty"`
 }
 
 type IdentityZoneLogoutLinks struct {

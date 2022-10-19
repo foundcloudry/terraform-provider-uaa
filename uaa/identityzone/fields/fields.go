@@ -7,7 +7,6 @@ const (
 	ClientSecretPolicy
 	CorsConfig
 	DefaultUserGroups
-	Id
 	InputPrompts
 	IsActive
 	IdpDiscoveryEnabled
@@ -39,8 +38,6 @@ func (s IdentityZoneField) String() string {
 		return "default_user_groups"
 	case HomeRedirectUrl:
 		return "home_redirect_url"
-	case Id:
-		return "id"
 	case InputPrompts:
 		return "input_prompt"
 	case IdpDiscoveryEnabled:

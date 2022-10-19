@@ -22,14 +22,14 @@ func readDataSource(ctx context.Context, data *schema.ResourceData, i interface{
 
 	izm := session.IdentityZoneManager()
 
-	id := data.Get(fields.Id.String()).(string)
+	name := data.Get(fields.Name.String()).(string)
 
-	identityZone, err := izm.FindById(id)
+	identityZone, err := izm.FindByName(name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	MapIdentityZone(identityZone, data)
+	MapIdentityZoneToResource(identityZone, data)
 
 	return nil
 }

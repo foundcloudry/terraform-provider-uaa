@@ -30,9 +30,10 @@ var DataSources = map[string]*schema.Resource{
 }
 
 var Resources = map[string]*schema.Resource{
-	"uaa_user":   user.Resource,
-	"uaa_client": client.Resource,
-	"uaa_group":  group.Resource,
+	"uaa_client":        client.Resource,
+	"uaa_group":         group.Resource,
+	"uaa_identity_zone": identityzone.Resource,
+	"uaa_user":          user.Resource,
 }
 
 func configureContext(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {

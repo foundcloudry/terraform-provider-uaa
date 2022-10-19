@@ -11,11 +11,7 @@ import (
 	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/tokenpolicyfields"
 )
 
-var Schema = map[string]*schema.Schema{
-	fields.Id.String(): {
-		Type:     schema.TypeString,
-		Required: true,
-	},
+var identityZoneSchema = map[string]*schema.Schema{
 	fields.AccountChooserEnabled.String(): {
 		Type:     schema.TypeBool,
 		Optional: true,
@@ -99,7 +95,7 @@ var Schema = map[string]*schema.Schema{
 	},
 	fields.SubDomain.String(): {
 		Type:     schema.TypeString,
-		Optional: true,
+		Required: true,
 	},
 	fields.ClientSecretPolicy.String(): {
 		Type:     schema.TypeList,
@@ -143,27 +139,22 @@ var ClientSecretPolicySchema = map[string]*schema.Schema{
 	clientsecretpolicyfields.MinLength.String(): {
 		Type:     schema.TypeInt,
 		Optional: true,
-		Default:  0,
 	},
 	clientsecretpolicyfields.MinUpperCaseChars.String(): {
 		Type:     schema.TypeInt,
 		Optional: true,
-		Default:  0,
 	},
 	clientsecretpolicyfields.MinLowerCaseChars.String(): {
 		Type:     schema.TypeInt,
 		Optional: true,
-		Default:  0,
 	},
 	clientsecretpolicyfields.MinDigits.String(): {
 		Type:     schema.TypeInt,
 		Optional: true,
-		Default:  0,
 	},
 	clientsecretpolicyfields.MinSpecialChars.String(): {
 		Type:     schema.TypeInt,
 		Optional: true,
-		Default:  0,
 	},
 }
 
@@ -328,21 +319,21 @@ var InputPromptSchema = map[string]*schema.Schema{
 	},
 }
 
-// The only required field for looking up an existing identity zone is the `id`.  All other fields should be optional
+// The only required field for looking up an existing identity zone is the `name`.  All other fields should be optional
 // and computed.  We can iterate over the resource schema and change those properties to avoid managing two schemas
 // that are otherwise identical.
-var dataSourceSchema = mapSchemaForDataSource(Schema)
+var dataSourceSchema = mapSchemaForDataSource(identityZoneSchema)
 
 func mapSchemaForDataSource(originalSchema map[string]*schema.Schema) map[string]*schema.Schema {
 
 	dsSchema := map[string]*schema.Schema{}
 
 	for k, v := range originalSchema {
-		isZoneId := k == fields.Id.String()
+		isName := k == fields.Name.String()
 		dsSchema[k] = &schema.Schema{
 			Type:     v.Type,
-			Required: isZoneId,
-			Computed: !isZoneId,
+			Required: isName,
+			Computed: !isName,
 			Elem:     v.Elem,
 		}
 		if v.Type == schema.TypeList {
