@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-uaa/test/util"
-	"github.com/terraform-providers/terraform-provider-uaa/uaa/api"
+	"github.com/jlpospisil/terraform-provider-uaa/test/util"
+	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
 	"testing"
 )
 
@@ -22,7 +22,8 @@ func TestUserDataSource(t *testing.T) {
 
 	resource.Test(t,
 		resource.TestCase{
-			ProviderFactories: util.IntegrationTestManager.ProviderFactories,
+			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			ProviderFactories: util.ProviderFactories,
 			Steps: []resource.TestStep{
 				{
 					Config: userDataResource,
@@ -45,7 +46,7 @@ func checkDataSourceUserExists(resource string) resource.TestCheckFunc {
 			return fmt.Errorf("user '%s' not found in terraform state", resource)
 		}
 
-		util.IntegrationTestManager.UaaSession().Log.DebugMessage(
+		util.UaaSession().Log.DebugMessage(
 			"terraform state for resource '%s': %# v",
 			resource, rs)
 
@@ -57,7 +58,7 @@ func checkDataSourceUserExists(resource string) resource.TestCheckFunc {
 			user api.UAAUser
 		)
 
-		user, err = util.IntegrationTestManager.UaaSession().UserManager().FindByUsername(name)
+		user, err = util.UaaSession().UserManager().FindByUsername(name)
 		if err != nil {
 			return err
 		}

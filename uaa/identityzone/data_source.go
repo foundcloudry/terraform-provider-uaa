@@ -1,15 +1,15 @@
-package group
+package identityzone
 
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/group/fields"
+	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/fields"
 )
 
 var DataSource = &schema.Resource{
-	Schema:      groupSchema,
+	Schema:      dataSourceSchema,
 	ReadContext: readDataSource,
 }
 
@@ -20,19 +20,16 @@ func readDataSource(ctx context.Context, data *schema.ResourceData, i interface{
 		return diag.Errorf("client is nil")
 	}
 
-	gm := session.GroupManager()
+	izm := session.IdentityZoneManager()
 
-	displayName := data.Get(fields.DisplayName.String()).(string)
-	zoneId := data.Get(fields.ZoneId.String()).(string)
+	id := data.Get(fields.Id.String()).(string)
 
-	group, err := gm.FindByDisplayName(displayName, zoneId)
+	identityZone, err := izm.FindById(id)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	data.SetId(group.ID)
-	data.Set(fields.Description.String(), group.Description)
-	data.Set(fields.ZoneId.String(), group.ZoneId)
+	MapIdentityZone(identityZone, data)
 
 	return nil
 }

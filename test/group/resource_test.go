@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-uaa/test/util"
+	"github.com/jlpospisil/terraform-provider-uaa/test/util"
 	"regexp"
 	"testing"
 )
@@ -36,7 +36,8 @@ func createTestGroupResource(displayName, description, zoneId string) string {
 func TestGroupResource_normal(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
-			ProviderFactories: util.IntegrationTestManager.ProviderFactories,
+			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testAccCheckGroupDestroy(originalDisplayName, updatedZoneId),
 			Steps: []resource.TestStep{
 				{
@@ -86,7 +87,8 @@ func TestGroupResource_normal(t *testing.T) {
 func TestGroupResource_createError(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
-			ProviderFactories: util.IntegrationTestManager.ProviderFactories,
+			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testAccCheckGroupDestroy(ref, defaultZoneId),
 			Steps: []resource.TestStep{
 				{
@@ -99,7 +101,7 @@ func TestGroupResource_createError(t *testing.T) {
 
 func testAccCheckGroupDestroy(id, zoneId string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		gm := util.IntegrationTestManager.UaaSession().GroupManager()
+		gm := util.UaaSession().GroupManager()
 		if _, err := gm.FindByDisplayName(id, zoneId); err != nil {
 			switch err.(type) {
 			case *errors.ModelNotFoundError:
