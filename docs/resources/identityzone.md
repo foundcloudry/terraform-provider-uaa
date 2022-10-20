@@ -21,32 +21,27 @@ data uaa_identity_zone "myzone" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the identity zone to look up
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `account_chooser_enabled` - This flag enables the account choosing functionality. If set to true in the config the IDP is chosen by discovery. Otherwise, the user can enter the IDP by providing the origin.
-* [`client_secret_policy`](#client_secret_policy) - The rules that are enforced when creating/updating client secrets. Documented below.
-* [`cors_policy`](#cors_policy) - The CORS policy defined for the identity zone. Documented Below.
-* `default_user_groups` - Default groups each user in the zone inherits.
-* `home_redirect_url` - Overrides the UAA home page and issues a redirect to this URL when the browser requests `/` and `/home`.
-* [`input_prompt`](#input_prompt) - List of fields that users are prompted for to login. Defaults to username, password, and passcode. Documented Below.
-* `idp_discovery_enabled` - IDP Discovery should be set to true if you have configured more than one identity provider for UAA. The discovery relies on email domain being set for each additional provider
-* `issuer_url` - Issuer of this zone. Must be a valid URL.
-* `is_active` - Indicates whether the identity zone is active. Defaults to true.
-* `logout_redirect_url` - Logout redirect url
-* `logout_redirect_param` - The name of the redirect parameter
-* `logout_allowed_redirect_urls` - Allowed logout redirect urls
-* `mfa_enabled` - `true` if Multi-factor Authentication (MFA) is enabled for the identity zone. Defaults to false
-* `mfa_identity_providers` - Only trigger MFA when user is using an identity provider whose origin key matches one of these values
-* `name` - Human-readable zone name
-* [`saml_config`](#saml_config) - SAML configuration for the identity zone. Documented Below.
-* `self_serve_enabled` - 	Whether users are allowed to sign up or reset their passwords via the UI
-* `self_serve_signup_url` - Where users are directed upon clicking the account creation link
-* `self_serve_pw_reset_url` - Where users are directed upon clicking the password reset link
-* `sub_domain` - Unique subdomain for the running instance. May only contain legal characters for a subdomain name.
-* [`token_policy`](#token_policy) - Various fields pertaining to the JWT access and refresh tokens.  Documented below.
+* `sub_domain` - (Required) Unique subdomain for the running instance. May only contain legal characters for a subdomain name.
+* `account_chooser_enabled` - (Optional) This flag enables the account choosing functionality. If set to true in the config the IDP is chosen by discovery. Otherwise, the user can enter the IDP by providing the origin.
+* [`client_secret_policy`](#client_secret_policy) - (Optional) The rules that are enforced when creating/updating client secrets. Documented below.
+* [`cors_policy`](#cors_policy) - (Optional) The CORS policy defined for the identity zone. Documented Below.
+* `default_user_groups` - (Optional) Default groups each user in the zone inherits.
+* `home_redirect_url` - (Optional) Overrides the UAA home page and issues a redirect to this URL when the browser requests `/` and `/home`.
+* [`input_prompt`](#input_prompt) - (Optional) List of fields that users are prompted for to login. Defaults to username, password, and passcode. Documented Below.
+* `idp_discovery_enabled` - (Optional) IDP Discovery should be set to true if you have configured more than one identity provider for UAA. The discovery relies on email domain being set for each additional provider
+* `issuer_url` - (Optional) Issuer of this zone. Must be a valid URL.
+* `is_active` - (Optional) Indicates whether the identity zone is active. Defaults to true.
+* `logout_redirect_url` - (Optional) Logout redirect url
+* `logout_redirect_param` - (Optional) The name of the redirect parameter
+* `logout_allowed_redirect_urls` - (Optional) Allowed logout redirect urls
+* `mfa_enabled` - `true` (Optional) if Multi-factor Authentication (MFA) is enabled for the identity zone. Defaults to false
+* `mfa_identity_providers` - (Optional) Only trigger MFA when user is using an identity provider whose origin key matches one of these values
+* `name` - (Optional) Human-readable zone name
+* [`saml_config`](#saml_config) - (Optional) SAML configuration for the identity zone. Documented Below.
+* `self_serve_enabled` - (Optional) Whether users are allowed to sign up or reset their passwords via the UI
+* `self_serve_signup_url` - (Optional) Where users are directed upon clicking the account creation link
+* `self_serve_pw_reset_url` - (Optional) Where users are directed upon clicking the password reset link
+* [`token_policy`](#token_policy) - (Optional) Various fields pertaining to the JWT access and refresh tokens.  Documented below.
 
 ### client_secret_policy
 
@@ -84,12 +79,12 @@ The following attributes are exported:
 * `is_assertion_signed` - If `true`, the SAML provider will sign all assertions
 * `is_request_signed` - Exposed SAML metadata property. If `true`, the service provider will sign all outgoing authentication requests. Defaults to `true`.
 * [`key`](#saml_configkey) - A list of the SAML provider's private keys. Documented below.
-* `want_assertion_signed` - Exposed SAML metadata property. If `true`, all assertions received by the SAML provider must be signed. Defaults to `true`.
+* `want_assertion_signed` - 	Exposed SAML metadata property. If `true`, all assertions received by the SAML provider must be signed. Defaults to `true`.
 * `want_authn_request_signed` - If `true`, the authentication request from the partner service provider must be signed.
 
 ### saml_config.key
 * `name` - The name of the SAML key
-* `certificate` - The
+* `certificate` - The 
 
 ### token_policy
 * `access_token_ttl` - Time in seconds between when a access token is issued and when it expires. Defaults to global `accessTokenValidity`
