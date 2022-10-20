@@ -15,7 +15,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.AccountChooserEnabled.String(): {
 		Type:     schema.TypeBool,
 		Optional: true,
-		Default:  false,
+		Computed: true,
 	},
 	fields.DefaultUserGroups.String(): {
 		Type:     schema.TypeSet,
@@ -54,12 +54,12 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.LogoutRedirectParam.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
-		Default:  "redirect",
+		Computed: true,
 	},
 	fields.LogoutRedirectUrl.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
-		Default:  "/login",
+		Computed: true,
 	},
 	fields.LogoutAllowedRedirectUrls.String(): {
 		Type:     schema.TypeSet,
@@ -72,7 +72,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.MfaEnabled.String(): {
 		Type:     schema.TypeBool,
 		Optional: true,
-		Default:  false,
+		Computed: true,
 	},
 	fields.MfaIdentityProviders.String(): {
 		Type:     schema.TypeSet,

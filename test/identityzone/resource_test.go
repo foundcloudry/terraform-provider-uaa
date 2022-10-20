@@ -12,9 +12,9 @@ import (
 
 const ref = "uaa_identity_zone.new-test-zone"
 const originalName = "New Test Zone"
-const originalSubDomain = "testzone"
+const originalSubDomain = "original-int-test-zone"
 const updatedName = "Updated Test Zone"
-const updatedSubdomain = "updatedzone"
+const updatedSubdomain = "updated-int-test-zone"
 
 func createTestResourceAttr(attribute, value string) string {
 	if attribute == "" || value == "" {
