@@ -83,7 +83,7 @@ The following attributes are exported:
 * `entity_id` - Unique ID of the SAML2 entity
 * `is_assertion_signed` - If `true`, the SAML provider will sign all assertions
 * `is_request_signed` - Exposed SAML metadata property. If `true`, the service provider will sign all outgoing authentication requests. Defaults to `true`.
-* [`key`](#saml_config.key) - A list of the SAML provider's private keys. Documented below.
+* [`key`](#saml_configkey) - A list of the SAML provider's private keys. Documented below.
 * `want_assertion_signed` - 	Exposed SAML metadata property. If `true`, all assertions received by the SAML provider must be signed. Defaults to `true`.
 * `want_authn_request_signed` - If `true`, the authentication request from the partner service provider must be signed.
 
