@@ -112,7 +112,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 			Schema: ClientSecretPolicySchema,
 		},
 	},
-	fields.CorsConfig.String(): {
+	fields.CorsPolicy.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
 		Computed: true,
@@ -203,10 +203,6 @@ var SamlConfigSchema = map[string]*schema.Schema{
 	},
 	samlconfigfields.AssertionTtlSeconds.String(): {
 		Type:     schema.TypeInt,
-		Optional: true,
-	},
-	samlconfigfields.Certificate.String(): {
-		Type:     schema.TypeString,
 		Optional: true,
 	},
 	samlconfigfields.DisableInResponseToCheck.String(): {

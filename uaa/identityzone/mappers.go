@@ -25,7 +25,7 @@ func MapIdentityZoneToResource(identityZone *api.IdentityZone, data *schema.Reso
 
 	if identityZone.Config != nil {
 		data.Set(fields.ClientSecretPolicy.String(), mapIdentityZoneClientSecretPolicyToInterface(identityZone.Config.ClientSecretPolicy))
-		data.Set(fields.CorsConfig.String(), mapIdentityZoneCorsPolicyToInterface(identityZone.Config.CorsPolicy))
+		data.Set(fields.CorsPolicy.String(), mapIdentityZoneCorsPolicyToInterface(identityZone.Config.CorsPolicy))
 		data.Set(fields.IdpDiscoveryEnabled.String(), &identityZone.Config.IdpDiscoveryEnabled)
 		data.Set(fields.InputPrompts.String(), mapIdentityZoneInputPromptsToInterface(identityZone.Config.InputPrompts))
 		data.Set(fields.IssuerUrl.String(), &identityZone.Config.IssuerUrl)
@@ -101,7 +101,6 @@ func mapIdentityZoneSamlConfigToInterface(data *api.IdentityZoneSamlConfig) []ma
 	return []map[string]interface{}{{
 		samlconfigfields.ActiveKeyId.String():              data.ActiveKeyId,
 		samlconfigfields.AssertionTtlSeconds.String():      data.AssertionTtlSeconds,
-		samlconfigfields.Certificate.String():              data.Certificate,
 		samlconfigfields.DisableInResponseToCheck.String(): data.DisableInResponseToCheck,
 		samlconfigfields.EntityId.String():                 data.EntityId,
 		samlconfigfields.IsAssertionSigned.String():        data.IsAssertionSigned,
@@ -228,7 +227,7 @@ func mapResourceToIdentityZoneClientSecretPolicy(data *schema.ResourceData) *api
 
 func mapResourceToIdentityZoneCorsPolicy(data *schema.ResourceData) (corsPolicy *api.IdentityZoneCorsPolicy) {
 
-	for _, p := range getFieldAsList(data, fields.CorsConfig.String()) {
+	for _, p := range getFieldAsList(data, fields.CorsPolicy.String()) {
 		policy := &api.IdentityZoneCorsConfig{
 			AllowedOrigins:        p[corsconfigfields.AllowedOrigins.String()].([]string),
 			AllowedOriginPatterns: p[corsconfigfields.AllowedOriginPatterns.String()].([]string),
@@ -303,7 +302,6 @@ func mapResourceToIdentityZoneSamlConfig(data *schema.ResourceData) *api.Identit
 		return &api.IdentityZoneSamlConfig{
 			ActiveKeyId:              samlConfig[samlconfigfields.ActiveKeyId.String()].(string),
 			AssertionTtlSeconds:      samlConfig[samlconfigfields.AssertionTtlSeconds.String()].(*int64),
-			Certificate:              samlConfig[samlconfigfields.Certificate.String()].(string),
 			DisableInResponseToCheck: samlConfig[samlconfigfields.DisableInResponseToCheck.String()].(bool),
 			EntityId:                 samlConfig[samlconfigfields.ActiveKeyId.String()].(string),
 			IsAssertionSigned:        samlConfig[samlconfigfields.IsAssertionSigned.String()].(bool),

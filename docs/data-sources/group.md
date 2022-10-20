@@ -11,7 +11,7 @@ Gets information on a Cloud Foundry UAA group.
 The following example looks up a group named 'mygroup'.
 
 ```
-data "uaa_user" "mygroup" {
+data uaa_group "mygroup" {
     display_name = "mygroup"    
 }
 ```

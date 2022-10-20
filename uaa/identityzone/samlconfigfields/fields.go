@@ -5,7 +5,6 @@ type SamlConfigField int64
 const (
 	ActiveKeyId SamlConfigField = iota
 	AssertionTtlSeconds
-	Certificate
 	DisableInResponseToCheck
 	EntityId
 	IsAssertionSigned
@@ -21,13 +20,10 @@ func (s SamlConfigField) String() string {
 		return "active_key_id"
 	case AssertionTtlSeconds:
 		return "assertion_ttl_seconds"
-	case Certificate:
-		return "certificate"
 	case DisableInResponseToCheck:
 		return "disable_in_response_to_check"
 	case EntityId:
 		return "entity_id"
-
 	case IsAssertionSigned:
 		return "is_assertion_signed"
 	case IsRequestSigned:
