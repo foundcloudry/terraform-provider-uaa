@@ -20,6 +20,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.DefaultUserGroups.String(): {
 		Type:     schema.TypeSet,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -31,6 +32,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.InputPrompts.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Resource{
 			Schema: InputPromptSchema,
 		},
@@ -52,14 +54,17 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.LogoutRedirectParam.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Default:  "redirect",
 	},
 	fields.LogoutRedirectUrl.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Default:  "/login",
 	},
 	fields.LogoutAllowedRedirectUrls.String(): {
 		Type:     schema.TypeSet,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -72,6 +77,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.MfaIdentityProviders.String(): {
 		Type:     schema.TypeSet,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -83,7 +89,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.SelfServeEnabled.String(): {
 		Type:     schema.TypeBool,
 		Optional: true,
-		Default:  false,
+		Default:  true,
 	},
 	fields.SelfServeSignupUrl.String(): {
 		Type:     schema.TypeString,
@@ -100,6 +106,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.ClientSecretPolicy.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: ClientSecretPolicySchema,
@@ -108,6 +115,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.CorsConfig.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MaxItems: 2,
 		Elem: &schema.Resource{
 			Schema: CorsPolicySchema,
@@ -116,6 +124,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.SamlConfig.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: SamlConfigSchema,
@@ -124,6 +133,7 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.TokenPolicy.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: TokenPolicySchema,
@@ -218,6 +228,7 @@ var SamlConfigSchema = map[string]*schema.Schema{
 	samlconfigfields.Key.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Resource{
 			Schema: SamlConfigKeySchema,
 		},
@@ -247,6 +258,7 @@ var CorsPolicySchema = map[string]*schema.Schema{
 	corsconfigfields.AllowedOrigins.String(): {
 		Type:     schema.TypeSet,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -254,6 +266,7 @@ var CorsPolicySchema = map[string]*schema.Schema{
 	corsconfigfields.AllowedOriginPatterns.String(): {
 		Type:     schema.TypeSet,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -261,6 +274,7 @@ var CorsPolicySchema = map[string]*schema.Schema{
 	corsconfigfields.AllowedUris.String(): {
 		Type:     schema.TypeSet,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -268,6 +282,7 @@ var CorsPolicySchema = map[string]*schema.Schema{
 	corsconfigfields.AllowedUriPatterns.String(): {
 		Type:     schema.TypeSet,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -275,6 +290,7 @@ var CorsPolicySchema = map[string]*schema.Schema{
 	corsconfigfields.AllowedHeaders.String(): {
 		Type:     schema.TypeSet,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -282,6 +298,7 @@ var CorsPolicySchema = map[string]*schema.Schema{
 	corsconfigfields.AllowedMethods.String(): {
 		Type:     schema.TypeSet,
 		Optional: true,
+		Computed: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
