@@ -7,7 +7,6 @@ import (
 )
 
 var userSchema = map[string]*schema.Schema{
-
 	fields.Name.String(): {
 		Type:     schema.TypeString,
 		Required: true,
@@ -43,5 +42,11 @@ var userSchema = map[string]*schema.Schema{
 			Type: schema.TypeString,
 		},
 		Set: util.ResourceStringHash,
+	},
+	fields.ZoneId.String(): {
+		Type:     schema.TypeString,
+		ForceNew: true,
+		Optional: true,
+		Computed: true,
 	},
 }

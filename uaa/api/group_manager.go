@@ -19,7 +19,7 @@ type GroupManager struct {
 }
 
 type UAAGroup struct {
-	ID          string `json:"id,omitempty"`
+	Id          string `json:"id,omitempty"`
 	DisplayName string `json:"displayName,omitempty"`
 	Description string `json:"description,omitempty"`
 	ZoneId      string `json:"zoneId,omitempty"`

@@ -18,6 +18,12 @@ var dataSourceSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
+	fields.ZoneId.String(): {
+		Type:     schema.TypeString,
+		ForceNew: true,
+		Optional: true,
+		Computed: true,
+	},
 }
 
 func readDataSource(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
@@ -29,13 +35,14 @@ func readDataSource(ctx context.Context, data *schema.ResourceData, i interface{
 
 	um := session.UserManager()
 	name := data.Get(fields.Name.String()).(string)
+	zoneId := data.Get(fields.ZoneId.String()).(string)
 
-	user, err := um.FindByUsername(name)
+	user, err := um.FindByUsername(name, zoneId)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	data.SetId(user.ID)
+	data.SetId(user.Id)
 
 	return nil
 }

@@ -93,9 +93,7 @@ func NewSession(config *Config) (s *Session, err error) {
 		return nil, err
 	}
 
-	if s.userManager.clientToken, err = s.authManager.GetClientToken(config.ClientID, config.ClientSecret); err == nil {
-		err = s.userManager.loadGroups()
-	}
+	s.userManager.clientToken, err = s.authManager.GetClientToken(config.ClientID, config.ClientSecret)
 
 	return
 }

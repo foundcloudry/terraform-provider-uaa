@@ -9,32 +9,37 @@ import (
 	"testing"
 )
 
+const defaultZoneId = "uaa"
+const updatedZoneId = "test-zone"
+
 const ldapUserResource = `
 
 resource "uaa_user" "manager1" {
-   name = "manager1@acme.com"
-   origin = "ldap"
+	name = "manager1@acme.com"
+	origin = "ldap"
 }
 `
 
 const userResourceWithGroups = `
 
 resource "uaa_user" "admin-service-user" {
-   name = "cf-admin"
+	name = "cf-admin"
 	password = "qwerty"
+	zone_id = "` + defaultZoneId + `"
 	given_name = "Build"
 	family_name = "User"
-   groups = [ "cloud_controller.admin", "scim.read", "scim.write" ]
+	groups = [ "cloud_controller.admin", "scim.read", "scim.write" ]
 }
 `
 
 const userResourceWithGroupsUpdate = `
 
 resource "uaa_user" "admin-service-user" {
-   name = "cf-admin"
+	name = "cf-admin"
 	password = "asdfg"
+	zone_id = "` + updatedZoneId + `"
 	email = "cf-admin@acme.com"
-   groups = [ "cloud_controller.admin", "clients.admin", "uaa.admin", "doppler.firehose" ]
+	groups = [ "cloud_controller.admin", "clients.admin", "uaa.admin", "doppler.firehose" ]
 }
 `
 
@@ -47,18 +52,16 @@ func TestAccUser_LdapOrigin_normal(t *testing.T) {
 		resource.TestCase{
 			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
 			ProviderFactories: util.ProviderFactories,
-			CheckDestroy:      testAccCheckUserDestroy(username),
+			CheckDestroy:      testAccCheckUserDestroyed(username),
 			Steps: []resource.TestStep{
 				{
 					Config: ldapUserResource,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckUserExists(ref),
-						resource.TestCheckResourceAttr(
-							ref, "name", username),
-						resource.TestCheckResourceAttr(
-							ref, "origin", "ldap"),
-						resource.TestCheckResourceAttr(
-							ref, "email", username),
+						testAccCheckUserExists(ref, defaultZoneId),
+						resource.TestCheckResourceAttr(ref, "name", username),
+						resource.TestCheckResourceAttr(ref, "origin", "ldap"),
+						resource.TestCheckResourceAttr(ref, "email", username),
+						resource.TestCheckResourceAttr(ref, "zone_id", defaultZoneId),
 					),
 				},
 			},
@@ -74,18 +77,16 @@ func TestAccUser_WithGroups_normal(t *testing.T) {
 		resource.TestCase{
 			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
 			ProviderFactories: util.ProviderFactories,
-			CheckDestroy:      testAccCheckUserDestroy(username),
+			CheckDestroy:      testAccCheckUserDestroyed(username),
 			Steps: []resource.TestStep{
 				{
 					Config: userResourceWithGroups,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckUserExists(ref),
-						resource.TestCheckResourceAttr(
-							ref, "name", username),
-						resource.TestCheckResourceAttr(
-							ref, "password", "qwerty"),
-						resource.TestCheckResourceAttr(
-							ref, "email", username),
+						testAccCheckUserExists(ref, defaultZoneId),
+						resource.TestCheckResourceAttr(ref, "name", username),
+						resource.TestCheckResourceAttr(ref, "password", "qwerty"),
+						resource.TestCheckResourceAttr(ref, "email", username),
+						resource.TestCheckResourceAttr(ref, "zone_id", defaultZoneId),
 						util.TestCheckResourceSet(ref, "groups", []string{
 							"cloud_controller.admin",
 							"scim.read",
@@ -97,13 +98,11 @@ func TestAccUser_WithGroups_normal(t *testing.T) {
 				{
 					Config: userResourceWithGroupsUpdate,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckUserExists(ref),
-						resource.TestCheckResourceAttr(
-							ref, "name", "cf-admin"),
-						resource.TestCheckResourceAttr(
-							ref, "password", "asdfg"),
-						resource.TestCheckResourceAttr(
-							ref, "email", "cf-admin@acme.com"),
+						testAccCheckUserExists(ref, updatedZoneId),
+						resource.TestCheckResourceAttr(ref, "name", "cf-admin"),
+						resource.TestCheckResourceAttr(ref, "password", "asdfg"),
+						resource.TestCheckResourceAttr(ref, "email", "cf-admin@acme.com"),
+						resource.TestCheckResourceAttr(ref, "zone_id", updatedZoneId),
 						util.TestCheckResourceSet(ref, "groups", []string{
 							"clients.admin",
 							"cloud_controller.admin",
@@ -116,7 +115,7 @@ func TestAccUser_WithGroups_normal(t *testing.T) {
 		})
 }
 
-func testAccCheckUserExists(resource string) resource.TestCheckFunc {
+func testAccCheckUserExists(resource, zoneId string) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
 
@@ -133,7 +132,7 @@ func testAccCheckUserExists(resource string) resource.TestCheckFunc {
 		attributes := rs.Primary.Attributes
 
 		um := util.UaaSession().UserManager()
-		user, err := um.GetUser(id)
+		user, err := um.GetUser(id, zoneId)
 		if err != nil {
 			return err
 		}
@@ -160,7 +159,11 @@ func testAccCheckUserExists(resource string) resource.TestCheckFunc {
 
 		var groups []interface{}
 		for _, g := range user.Groups {
-			if !um.IsDefaultGroup(g.Display) {
+			isDefault, err := um.IsDefaultGroup(zoneId, g.Display)
+			if err != nil {
+				return err
+			}
+			if !isDefault {
 				groups = append(groups, g.Display)
 			}
 		}
@@ -172,18 +175,29 @@ func testAccCheckUserExists(resource string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckUserDestroy(username string) resource.TestCheckFunc {
+func testAccCheckUserDestroyed(username string) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
-		um := util.UaaSession().UserManager()
-		if _, err := um.FindByUsername(username); err != nil {
-			switch err.(type) {
-			case *errors.ModelNotFoundError:
-				return nil
-			default:
+
+		for _, zoneId := range []string{defaultZoneId, updatedZoneId} {
+			if err := testCheckUserDoesNotExistInZone(username, zoneId); err != nil {
 				return err
 			}
 		}
-		return fmt.Errorf("user with username '%s' still exists in cloud foundry", username)
+		return nil
 	}
+}
+
+func testCheckUserDoesNotExistInZone(username, zoneId string) error {
+
+	um := util.UaaSession().UserManager()
+	if _, err := um.FindByUsername(username, zoneId); err != nil {
+		switch err.(type) {
+		case *errors.ModelNotFoundError:
+			return nil
+		default:
+			return err
+		}
+	}
+	return fmt.Errorf("user with username '%s' still exists in cloud foundry", username)
 }

@@ -35,7 +35,8 @@ func createResource(ctx context.Context, data *schema.ResourceData, i interface{
 	}
 	session.Log.DebugMessage("New group created: %# v", group)
 
-	data.SetId(group.ID)
+	data.SetId(group.Id)
+	data.Set(fields.ZoneId.String(), group.ZoneId)
 
 	return nil
 }

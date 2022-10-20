@@ -34,6 +34,7 @@ The following arguments are supported:
 * `family_name` - (Optional) The family name of the user
 * `email` - (Optional) The email address of the user
 * `groups` - (Optional) Any UAA `groups` / `roles` to associated the user with
+* `zone_id` - (Optional) The identity zone that the user belongs to
 
 ## Attributes Reference
 

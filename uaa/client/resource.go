@@ -69,7 +69,7 @@ func readResource(ctx context.Context, data *schema.ResourceData, i interface{})
 		data.SetId("")
 		return diag.FromErr(err)
 	}
-	session.Log.DebugMessage("Client with ID '%s' retrieved: %# v", id, client)
+	session.Log.DebugMessage("Client with Id '%s' retrieved: %# v", id, client)
 
 	if !client.HasDefaultScope() {
 		data.Set(fields.Scope.String(), schema.NewSet(util.ResourceStringHash, util.ToInterface(client.Scope)))

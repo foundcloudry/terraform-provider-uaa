@@ -84,7 +84,7 @@ func checkDataSourceGroupExists(resource string) resource.TestCheckFunc {
 		if err != nil {
 			return err
 		}
-		if err := util.AssertSame(group.ID, id); err != nil {
+		if err := util.AssertSame(group.Id, id); err != nil {
 			return err
 		}
 

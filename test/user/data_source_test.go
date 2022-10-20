@@ -28,7 +28,7 @@ func TestUserDataSource(t *testing.T) {
 				{
 					Config: userDataResource,
 					Check: resource.ComposeTestCheckFunc(
-						checkDataSourceUserExists(ref),
+						checkDataSourceUserExists(ref, defaultZoneId),
 						resource.TestCheckResourceAttr(
 							ref, "name", "admin"),
 					),
@@ -37,7 +37,7 @@ func TestUserDataSource(t *testing.T) {
 		})
 }
 
-func checkDataSourceUserExists(resource string) resource.TestCheckFunc {
+func checkDataSourceUserExists(resource, zoneId string) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
 
@@ -58,11 +58,11 @@ func checkDataSourceUserExists(resource string) resource.TestCheckFunc {
 			user api.UAAUser
 		)
 
-		user, err = util.UaaSession().UserManager().FindByUsername(name)
+		user, err = util.UaaSession().UserManager().FindByUsername(name, zoneId)
 		if err != nil {
 			return err
 		}
-		if err := util.AssertSame(user.ID, id); err != nil {
+		if err := util.AssertSame(user.Id, id); err != nil {
 			return err
 		}
 

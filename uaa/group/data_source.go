@@ -30,7 +30,7 @@ func readDataSource(ctx context.Context, data *schema.ResourceData, i interface{
 		return diag.FromErr(err)
 	}
 
-	data.SetId(group.ID)
+	data.SetId(group.Id)
 	data.Set(fields.Description.String(), group.Description)
 	data.Set(fields.ZoneId.String(), group.ZoneId)
 

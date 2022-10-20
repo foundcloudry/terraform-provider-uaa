@@ -3,12 +3,15 @@ package apiheaders
 type ApiHeader int64
 
 const (
-	IfMatch ApiHeader = iota
+	Authorization ApiHeader = iota
+	IfMatch
 	ZoneId
 )
 
 func (s ApiHeader) String() string {
 	switch s {
+	case Authorization:
+		return "Authorization"
 	case IfMatch:
 		return "If-Match"
 	case ZoneId:

@@ -10,6 +10,7 @@ const (
 	Name
 	Origin
 	Password
+	ZoneId
 )
 
 func (s UserField) String() string {
@@ -28,6 +29,8 @@ func (s UserField) String() string {
 		return "origin"
 	case Password:
 		return "password"
+	case ZoneId:
+		return "zone_id"
 	}
 	return "unknown"
 }

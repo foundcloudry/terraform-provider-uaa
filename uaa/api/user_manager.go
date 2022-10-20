@@ -1,7 +1,7 @@
 package api
 
 import (
-	"bytes"
+	"code.cloudfoundry.org/cli/cf/net"
 	"encoding/json"
 	"fmt"
 	apiheaders "github.com/jlpospisil/terraform-provider-uaa/uaa/api/headers"
@@ -10,89 +10,82 @@ import (
 
 	"code.cloudfoundry.org/cli/cf/configuration/coreconfig"
 	"code.cloudfoundry.org/cli/cf/errors"
-	"code.cloudfoundry.org/cli/cf/net"
 )
 
-// UserManager -
 type UserManager struct {
-	log *Logger
-
-	config     coreconfig.Reader
-	uaaGateway net.Gateway
-
-	clientToken string
-
-	groupMap      map[string]string
-	defaultGroups map[string]byte
+	log           *Logger
+	api           *UaaApi
+	clientToken   string
+	groupMap      map[string]map[string]string
+	defaultGroups map[string]map[string]int
 }
 
-// UAAUser -
 type UAAUser struct {
-	ID       string `json:"id,omitempty"`
-	Username string `json:"userName,omitempty"`
-	Password string `json:"password,omitempty"`
-	Origin   string `json:"origin,omitempty"`
-
-	Name   UAAUserName    `json:"name,omitempty"`
-	Emails []UAAUserEmail `json:"emails,omitempty"`
-	Groups []UAAUserGroup `json:"groups,omitempty"`
+	Id       string         `json:"id,omitempty"`
+	Username string         `json:"userName,omitempty"`
+	Password string         `json:"password,omitempty"`
+	Origin   string         `json:"origin,omitempty"`
+	Name     UAAUserName    `json:"name,omitempty"`
+	Emails   []UAAUserEmail `json:"emails,omitempty"`
+	Groups   []UAAUserGroup `json:"groups,omitempty"`
+	ZoneId   string         `json:"zoneId,omitempty"`
 }
 
-// UAAUserResourceList -
 type UAAUserResourceList struct {
 	Resources []UAAUser `json:"resources"`
 }
 
-// UAAUserEmail -
 type UAAUserEmail struct {
 	Value string `json:"value"`
 }
 
-// UAAUserName -
 type UAAUserName struct {
 	GivenName  string `json:"givenName"`
 	FamilyName string `json:"familyName"`
 }
 
-// UAAUserGroup -
 type UAAUserGroup struct {
 	Value   string `json:"value"`
 	Display string `json:"display"`
 	Type    string `json:"type"`
 }
 
-// NewUserManager -
-func newUserManager(config coreconfig.Reader, uaaGateway net.Gateway, logger *Logger) (um *UserManager, err error) {
+func newUserManager(config coreconfig.Reader, gateway net.Gateway, logger *Logger) (um *UserManager, err error) {
+
+	api, err := newUaaApi(config, gateway)
+	if err != nil {
+		return
+	}
 
 	um = &UserManager{
-		log: logger,
-
-		config:        config,
-		uaaGateway:    uaaGateway,
-		groupMap:      make(map[string]string),
-		defaultGroups: make(map[string]byte),
+		log:           logger,
+		api:           api,
+		groupMap:      make(map[string]map[string]string),
+		defaultGroups: make(map[string]map[string]int),
 	}
 	return
 }
 
-func (um *UserManager) loadGroups() (err error) {
+func (um *UserManager) loadGroups(zoneId string) (err error) {
 
-	uaaEndpoint := um.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
+	if _, ok := um.defaultGroups[zoneId]; ok {
+		// We've already populated the default groups for this zone; nothing to do
 		return
 	}
 
+	uaaApi := um.api.WithZoneId(zoneId)
+
+	um.groupMap[zoneId] = make(map[string]string)
+	um.defaultGroups[zoneId] = make(map[string]int)
+
 	// Retrieve all groups
 	groupList := &UAAGroupResourceList{}
-	err = um.uaaGateway.GetResource(
-		fmt.Sprintf("%s/Groups", uaaEndpoint),
-		groupList)
+	err = uaaApi.Get("/Groups", groupList)
 	if err != nil {
 		return
 	}
 	for _, r := range groupList.Resources {
-		um.groupMap[r.DisplayName] = r.ID
+		um.groupMap[zoneId][r.DisplayName] = r.Id
 	}
 
 	// Retrieve default scope/groups for a new user by creating
@@ -107,58 +100,45 @@ func (um *UserManager) loadGroups() (err error) {
 		Origin:   "uaa",
 		Emails:   []UAAUserEmail{{Value: "email@domain.com"}},
 	}
-	body, err := json.Marshal(userResource)
-	if err != nil {
-		return
-	}
 	user := &UAAUser{}
-	err = um.uaaGateway.CreateResource(uaaEndpoint, "/Users", bytes.NewReader(body), user)
+	err = uaaApi.Post("/Users", userResource, user)
 	if err != nil {
 		return err
 	}
-	err = um.uaaGateway.DeleteResource(uaaEndpoint, fmt.Sprintf("/Users/%s", user.ID))
+	err = uaaApi.Delete(fmt.Sprintf("/Users/%s", user.Id))
 	if err != nil {
 		return err
 	}
 	for _, g := range user.Groups {
-		um.defaultGroups[g.Display] = 1
+		um.defaultGroups[zoneId][g.Display] = 1
 	}
 
 	return
 }
 
-// IsDefaultGroup -
-func (um *UserManager) IsDefaultGroup(group string) (ok bool) {
-	_, ok = um.defaultGroups[group]
+func (um *UserManager) IsDefaultGroup(zoneId, group string) (ok bool, err error) {
+
+	// Make sure the groups have been loaded for this zone; will noop if so
+	if err = um.loadGroups(zoneId); err == nil {
+		_, ok = um.defaultGroups[zoneId][group]
+	}
+
 	return
 }
 
-// GetUser -
-func (um *UserManager) GetUser(id string) (user *UAAUser, err error) {
+func (um *UserManager) GetUser(id, zoneId string) (user *UAAUser, err error) {
 
-	uaaEndpoint := um.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
+	uaaApi := um.api.WithZoneId(zoneId)
 
 	user = &UAAUser{}
-	err = um.uaaGateway.GetResource(
-		fmt.Sprintf("%s/Users/%s", uaaEndpoint, id),
-		user)
+	err = uaaApi.Get(fmt.Sprintf("/Users/%s", id), user)
 
 	return
 }
 
-// CreateUser -
-func (um *UserManager) CreateUser(
-	username, password, origin, givenName, familyName, email string) (user UAAUser, err error) {
+func (um *UserManager) CreateUser(username, password, origin, givenName, familyName, email, zoneId string) (user *UAAUser, err error) {
 
-	uaaEndpoint := um.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
+	uaaApi := um.api.WithZoneId(zoneId)
 
 	userResource := UAAUser{
 		Username: username,
@@ -175,31 +155,23 @@ func (um *UserManager) CreateUser(
 		userResource.Emails = append(userResource.Emails, UAAUserEmail{username})
 	}
 
-	body, err := json.Marshal(userResource)
+	user = &UAAUser{}
+	err = uaaApi.Post("/Users", userResource, user)
 	if err != nil {
-		return
-	}
-
-	user = UAAUser{}
-	err = um.uaaGateway.CreateResource(uaaEndpoint, "/Users", bytes.NewReader(body), &user)
-	switch httpErr := err.(type) {
-	case errors.HTTPError:
-		if httpErr.StatusCode() == http.StatusConflict {
-			err = errors.NewModelAlreadyExistsError("user", username)
+		switch httpErr := err.(type) {
+		case errors.HTTPError:
+			if httpErr.StatusCode() == http.StatusConflict {
+				err = errors.NewModelAlreadyExistsError("user", username)
+			}
 		}
 	}
+
 	return
 }
 
-// UpdateUser -
-func (um *UserManager) UpdateUser(
-	id, username, givenName, familyName, email string) (user *UAAUser, err error) {
+func (um *UserManager) UpdateUser(id, username, givenName, familyName, email, zoneId string) (user *UAAUser, err error) {
 
-	uaaEndpoint := um.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
+	uaaApi := um.api.WithZoneId(zoneId)
 
 	userResource := UAAUser{
 		Username: username,
@@ -214,46 +186,26 @@ func (um *UserManager) UpdateUser(
 		userResource.Emails = append(userResource.Emails, UAAUserEmail{username})
 	}
 
-	body, err := json.Marshal(userResource)
-	if err != nil {
-		return
-	}
-
-	request, err := um.uaaGateway.NewRequest("PUT",
-		fmt.Sprintf("%s/Users/%s", uaaEndpoint, id),
-		um.config.AccessToken(), bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-	request.HTTPReq.Header.Set(apiheaders.IfMatch.String(), "*")
-
 	user = &UAAUser{}
-	_, err = um.uaaGateway.PerformRequestForJSONResponse(request, user)
+	err = uaaApi.
+		WithHeaders(map[string]string{
+			apiheaders.IfMatch.String(): "*",
+		}).
+		Put(fmt.Sprintf("/Users/%s", id), userResource, user)
 
 	return
 }
 
-// DeleteUser -
-func (um *UserManager) DeleteUser(id string) (err error) {
+func (um *UserManager) DeleteUser(id, zoneId string) error {
 
-	uaaEndpoint := um.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
-	err = um.uaaGateway.DeleteResource(uaaEndpoint, fmt.Sprintf("/Users/%s", id))
-	return
+	return um.api.
+		WithZoneId(zoneId).
+		Delete(fmt.Sprintf("/Users/%s", id))
 }
 
-// ChangePassword -
-func (um *UserManager) ChangePassword(
-	id, oldPassword, newPassword string) (err error) {
+func (um *UserManager) ChangePassword(id, oldPassword, newPassword, zoneId string) (err error) {
 
-	uaaEndpoint := um.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
+	uaaApi := um.api.WithZoneId(zoneId)
 
 	body, err := json.Marshal(map[string]string{
 		"oldPassword": oldPassword,
@@ -263,58 +215,43 @@ func (um *UserManager) ChangePassword(
 		return
 	}
 
-	request, err := um.uaaGateway.NewRequest("PUT",
-		uaaEndpoint+fmt.Sprintf("/Users/%s/password", id),
-		um.config.AccessToken(), bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-	request.HTTPReq.Header.Set("Authorization", um.clientToken)
+	err = uaaApi.
+		WithHeaders(map[string]string{
+			apiheaders.Authorization.String(): um.clientToken,
+		}).
+		Put(fmt.Sprintf("/Users/%s/password", id), body, nil)
 
-	response := make(map[string]interface{})
-	_, err = um.uaaGateway.PerformRequestForJSONResponse(request, response)
-	if err != nil {
-		return err
-	}
 	return
 }
 
-// UpdateRoles -
-func (um *UserManager) UpdateRoles(
-	id string, scopesToDelete, scopesToAdd []string, origin string) (err error) {
+func (um *UserManager) UpdateRoles(id string, scopesToDelete, scopesToAdd []string, origin, zoneId string) (err error) {
 
-	uaaEndpoint := um.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
+	// Make sure the groups have been loaded for this zone; will noop if so
+	if err = um.loadGroups(zoneId); err != nil {
 		return
 	}
 
+	uaaApi := um.api.WithZoneId(zoneId)
+
 	for _, s := range scopesToDelete {
-		roleID := um.groupMap[s]
-		err = um.uaaGateway.DeleteResource(uaaEndpoint,
-			fmt.Sprintf("/Groups/%s/members/%s", roleID, id))
+		roleID := um.groupMap[zoneId][s]
+		err = uaaApi.Delete(fmt.Sprintf("/Groups/%s/members/%s", roleID, id))
 	}
 	for _, s := range scopesToAdd {
-		roleID, exists := um.groupMap[s]
+		roleID, exists := um.groupMap[zoneId][s]
 		if !exists {
 			err = fmt.Errorf("Group '%s' was not found", s)
 			return
 		}
 
-		var body []byte
-		body, err = json.Marshal(map[string]string{
+		body := map[string]string{
 			"origin": origin,
 			"type":   "USER",
 			"value":  id,
-		})
-		if err != nil {
-			return
 		}
 
 		response := make(map[string]interface{})
-		err = um.uaaGateway.CreateResource(uaaEndpoint,
-			fmt.Sprintf("/Groups/%s/members", roleID),
-			bytes.NewReader(body), &response)
+		err = uaaApi.Post(fmt.Sprintf("/Groups/%s/members", roleID), body, &response)
 		if err != nil {
 			return
 		}
@@ -323,27 +260,24 @@ func (um *UserManager) UpdateRoles(
 	return
 }
 
-// FindByUsername -
-func (um *UserManager) FindByUsername(username string) (user UAAUser, err error) {
+func (um *UserManager) FindByUsername(username, zoneId string) (user UAAUser, err error) {
 
-	uaaEndpoint := um.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
+	uaaApi := um.api.WithZoneId(zoneId)
+
+	usernameFilter := url.QueryEscape(fmt.Sprintf(`userName Eq "%s"`, username))
+	path := fmt.Sprintf("/Users?filter=%s", usernameFilter)
+
+	userResourceList := &UAAUserResourceList{}
+	err = uaaApi.Get(path, userResourceList)
+	if err != nil {
 		return
 	}
 
-	usernameFilter := url.QueryEscape(fmt.Sprintf(`userName Eq "%s"`, username))
-	path := fmt.Sprintf("%s/Users?filter=%s", uaaEndpoint, usernameFilter)
-
-	userResourceList := &UAAUserResourceList{}
-	err = um.uaaGateway.GetResource(path, userResourceList)
-
-	if err == nil {
-		if len(userResourceList.Resources) > 0 {
-			user = userResourceList.Resources[0]
-		} else {
-			err = errors.NewModelNotFoundError("User", username)
-		}
+	if len(userResourceList.Resources) > 0 {
+		user = userResourceList.Resources[0]
+	} else {
+		err = errors.NewModelNotFoundError("User", username)
 	}
+
 	return
 }

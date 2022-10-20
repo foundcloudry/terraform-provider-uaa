@@ -21,6 +21,7 @@ data "uaa_user" "myuser" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the user to look up
+* `zone_id` - (Optional) The identity zone that the user belongs to
 
 ## Attributes Reference
 

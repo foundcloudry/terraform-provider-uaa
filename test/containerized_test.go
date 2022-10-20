@@ -80,6 +80,7 @@ func (uaaTestManager *integrationTestManager) prepareEnvironment() {
 func (uaaTestManager *integrationTestManager) prepareDbContainer() {
 	log.Println("Preparing test db container...")
 
+	testZoneInitSqlPath, _ := filepath.Abs("../test/resources/test-zone-init.sql")
 	req := testcontainers.ContainerRequest{
 		Image: "postgres:14.5-alpine",
 		Env: map[string]string{
@@ -89,6 +90,9 @@ func (uaaTestManager *integrationTestManager) prepareDbContainer() {
 			"PGPASSWORD":        os.Getenv("DB_PASSWORD"),
 		},
 		WaitingFor: wait.ForLog("database system is ready to accept connections"),
+		Mounts: testcontainers.Mounts(
+			testcontainers.BindMount(testZoneInitSqlPath, "/root/test-zone-init.sql"),
+		),
 	}
 
 	uaaTestManager.dbContainer = uaaTestManager.prepareContainer(req)
@@ -142,11 +146,10 @@ func (uaaTestManager *integrationTestManager) createTestIdentityZone() {
 		"psql",
 		"-U", os.Getenv("DB_USERNAME"),
 		"-d", os.Getenv("DB_DATABASE"),
-		"-c", "insert into identity_zone (id, name, subdomain) values ('test-zone', 'Test Zone', 'testzone');",
+		"-a", "-f", "/root/test-zone-init.sql",
 	}
 
 	_, _, err := uaaTestManager.dbContainer.Exec(uaaTestManager.context, cmd)
-
 	if err != nil {
 		log.Println("Unable to create test zone; Expect test failures for tests that depend on that zone.")
 	}

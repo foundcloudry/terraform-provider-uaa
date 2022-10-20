@@ -18,6 +18,6 @@ var groupSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		ForceNew: true,
 		Optional: true,
-		Default:  "uaa",
+		Computed: true,
 	},
 }
