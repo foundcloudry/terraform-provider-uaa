@@ -12,7 +12,8 @@ The following example looks up an identity zone named 'my-zone'.
 
 ```
 data uaa_identity_zone "myzone" {
-    name = "my-zone"    
+    name = "my-zone"
+    sub_domain = "my-zone"  
 }
 ```
 
