@@ -88,6 +88,14 @@ var clientSchema = map[string]*schema.Schema{
 		Elem:     &schema.Schema{Type: schema.TypeString},
 		Set:      util.ResourceStringHash,
 	},
+	fields.ZoneId.String(): {
+		Type:     schema.TypeString,
+		ForceNew: true,
+		Optional: true,
+		// We don't get the zoneId back in the response for clients, so we'll default it instead
+		// of relying on it being computed.
+		Default: "uaa",
+	},
 }
 
 // dataSourceSchema is the same as the resource schema but only the client Id is required; all other fields are optional

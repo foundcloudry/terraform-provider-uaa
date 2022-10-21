@@ -19,6 +19,7 @@ const (
 	ResourceIds
 	Scope
 	TokenSalt
+	ZoneId
 )
 
 func (s ClientField) String() string {
@@ -55,6 +56,8 @@ func (s ClientField) String() string {
 		return "scope"
 	case TokenSalt:
 		return "token_salt"
+	case ZoneId:
+		return "zone_id"
 	}
 	return "unknown"
 }

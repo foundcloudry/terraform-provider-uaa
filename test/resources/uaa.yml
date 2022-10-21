@@ -11,6 +11,9 @@ zones:
     hostnames:
       - localhost
       - auth.example.com
+  test-zone:
+    hostnames:
+      - localhost
 
 oauth:
   clients:

@@ -129,7 +129,7 @@ func (tm *AuthManager) Authenticate(credentials map[string]string) error {
 		data[key] = []string{val}
 	}
 
-	response, err := tm.getAuthToken("cf", "", data)
+	response, err := tm.getAuthToken("cf", "", "", data)
 	if err != nil {
 		httpError, ok := err.(errors.HTTPError)
 		if ok {
@@ -149,13 +149,13 @@ func (tm *AuthManager) Authenticate(credentials map[string]string) error {
 }
 
 // GetClientToken -
-func (tm *AuthManager) GetClientToken(clientID, clientSecret string) (clientToken string, err error) {
+func (tm *AuthManager) GetClientToken(clientID, clientSecret, subDomain string) (clientToken string, err error) {
 
 	data := url.Values{
 		"grant_type": {"client_credentials"},
 	}
 
-	response, err := tm.getAuthToken(clientID, clientSecret, data)
+	response, err := tm.getAuthToken(clientID, clientSecret, subDomain, data)
 	if err != nil {
 		httpError, ok := err.(errors.HTTPError)
 		if ok {
@@ -184,7 +184,7 @@ func (tm *AuthManager) RefreshToken() (string, error) {
 		"scope":         {""},
 	}
 
-	response, err := tm.getAuthToken("cf", "", data)
+	response, err := tm.getAuthToken("cf", "", "", data)
 	if err != nil {
 		return "", err
 	}
@@ -195,9 +195,15 @@ func (tm *AuthManager) RefreshToken() (string, error) {
 	return tm.config.AccessToken(), err
 }
 
-func (tm *AuthManager) getAuthToken(clientID, clientSecret string, data url.Values) (*authenticationResponse, error) {
+func (tm *AuthManager) getAuthToken(clientID, clientSecret, subDomain string, data url.Values) (*authenticationResponse, error) {
 
-	path := fmt.Sprintf("%s/oauth/token", tm.config.AuthenticationEndpoint())
+	authUrl := tm.config.AuthenticationEndpoint()
+	if subDomain != "" {
+		authUrl = strings.Replace(authUrl, "http://", "http://"+subDomain+".", 1)
+		authUrl = strings.Replace(authUrl, "https://", "https://"+subDomain+".", 1)
+	}
+
+	path := fmt.Sprintf("%s/oauth/token", authUrl)
 	request, err := tm.gateway.NewRequest("POST", path,
 		"Basic "+base64.StdEncoding.EncodeToString([]byte(clientID+":"+clientSecret)),
 		strings.NewReader(data.Encode()))

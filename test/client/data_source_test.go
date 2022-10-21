@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jlpospisil/terraform-provider-uaa/test/util"
 	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
+	"github.com/jlpospisil/terraform-provider-uaa/uaa/client/fields"
 	"regexp"
 	"testing"
 )
@@ -77,14 +78,15 @@ func checkDataSourceClientExists(resource string) resource.TestCheckFunc {
 			resource, rs)
 
 		id := rs.Primary.ID
-		client_id := rs.Primary.Attributes["client_id"]
+		clientId := rs.Primary.Attributes[fields.ClientId.String()]
+		zoneId := rs.Primary.Attributes[fields.ZoneId.String()]
 
 		var (
 			err    error
 			client api.UAAClient
 		)
 
-		client, err = util.UaaSession().ClientManager().FindByClientID(client_id)
+		client, err = util.UaaSession().ClientManager().FindByClientID(clientId, zoneId)
 		if err != nil {
 			return err
 		}

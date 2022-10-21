@@ -42,8 +42,9 @@ func createResource(ctx context.Context, data *schema.ResourceData, i interface{
 		ApprovalsDeleted:     data.Get(fields.ApprovalsDeleted.String()).(bool),
 	}
 
+	zoneId := data.Get(fields.ZoneId.String()).(string)
 	um := session.ClientManager()
-	client, err := um.Create(client)
+	client, err := um.Create(client, zoneId)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -63,8 +64,9 @@ func readResource(ctx context.Context, data *schema.ResourceData, i interface{})
 
 	um := session.ClientManager()
 	id := data.Id()
+	zoneId := data.Get(fields.ZoneId.String()).(string)
 
-	client, err := um.GetClient(id)
+	client, err := um.GetClient(id, zoneId)
 	if err != nil {
 		data.SetId("")
 		return diag.FromErr(err)
@@ -107,6 +109,7 @@ func updateResource(ctx context.Context, data *schema.ResourceData, i interface{
 	}
 
 	id := data.Id()
+	zoneId := data.Get(fields.ZoneId.String()).(string)
 	um := session.ClientManager()
 
 	isModified := false
@@ -143,7 +146,7 @@ func updateResource(ctx context.Context, data *schema.ResourceData, i interface{
 			ApprovalsDeleted:     *approval,
 			RequiredUserGroups:   *groups,
 		}
-		nclient, err := um.UpdateClient(&client)
+		nclient, err := um.UpdateClient(&client, zoneId)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -152,7 +155,7 @@ func updateResource(ctx context.Context, data *schema.ResourceData, i interface{
 
 	updateSecret, oldSecret, newSecret := util.GetResourceChange("client_secret", data)
 	if updateSecret {
-		err := um.ChangeSecret(id, oldSecret, newSecret)
+		err := um.ChangeSecret(id, oldSecret, newSecret, zoneId)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -169,8 +172,9 @@ func deleteResource(ctx context.Context, data *schema.ResourceData, i interface{
 	}
 
 	id := data.Id()
+	zoneId := data.Get(fields.ZoneId.String()).(string)
 	um := session.ClientManager()
-	_ = um.DeleteClient(id)
+	_ = um.DeleteClient(id, zoneId)
 
 	return nil
 }

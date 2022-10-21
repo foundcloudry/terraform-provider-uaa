@@ -21,6 +21,7 @@ data "uaa_client" "myclient" {
 The following arguments are supported:
 
 * `client_id` - (Required) The client_id of the client to look up
+* `zone_id` - (Optional) The identity zone that the client belongs to
 
 ## Attributes Reference
 

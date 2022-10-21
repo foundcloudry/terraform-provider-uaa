@@ -10,6 +10,9 @@ import (
 	"testing"
 )
 
+const defaultZoneId = "uaa"
+const updatedZoneId = "uaa" // TODO: this actually needs to be "test-zone" once routing/auth is figured out for containerized tests
+
 const clientResource = `
 resource "uaa_client" "client1" {
     client_id = "my-name"
@@ -25,6 +28,16 @@ resource "uaa_client" "client1" {
     authorized_grant_types = [ "client_credentials" ]
     redirect_uri = [ "https://uaa.local.pcfdev.io/login" ]
     client_secret = "newsecret"
+}
+`
+
+const clientResourceUpdateZone = `
+resource "uaa_client" "client1" {
+    client_id = "my-name"
+    authorized_grant_types = [ "client_credentials" ]
+    redirect_uri = [ "https://uaa.local.pcfdev.io/login" ]
+    client_secret = "newsecret"
+	zone_id = "` + updatedZoneId + `"
 }
 `
 
@@ -54,23 +67,33 @@ func TestAccClient_normal(t *testing.T) {
 		resource.TestCase{
 			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
 			ProviderFactories: util.ProviderFactories,
-			CheckDestroy:      testAccCheckClientDestroy(clientid),
+			CheckDestroy:      testClientDestroyed(clientid),
 			Steps: []resource.TestStep{
-				resource.TestStep{
+				{
 					Config: clientResource,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckClientExists(ref),
-						testAccCheckValidSecret(ref, "mysecret"),
+						testAccCheckClientExists(ref, defaultZoneId),
+						testAccCheckValidSecret(ref, "mysecret", defaultZoneId),
 						resource.TestCheckResourceAttr(ref, "client_id", clientid),
 						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
 						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
 					),
 				},
-				resource.TestStep{
+				{
 					Config: clientResourceUpdateSecret,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckClientExists(ref),
-						testAccCheckValidSecret(ref, "newsecret"),
+						testAccCheckClientExists(ref, defaultZoneId),
+						testAccCheckValidSecret(ref, "newsecret", defaultZoneId),
+						resource.TestCheckResourceAttr(ref, "client_id", clientid),
+						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
+						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
+					),
+				},
+				{
+					Config: clientResourceUpdateZone,
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckClientExists(ref, updatedZoneId),
+						testAccCheckValidSecret(ref, "newsecret", updatedZoneId),
 						resource.TestCheckResourceAttr(ref, "client_id", clientid),
 						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
 						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
@@ -88,13 +111,13 @@ func TestAccClient_scope(t *testing.T) {
 		resource.TestCase{
 			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
 			ProviderFactories: util.ProviderFactories,
-			CheckDestroy:      testAccCheckClientDestroy(clientid),
+			CheckDestroy:      testClientDestroyed(clientid),
 			Steps: []resource.TestStep{
-				resource.TestStep{
+				{
 					Config: clientResourceWithScope,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckClientExists(ref),
-						testAccCheckValidSecret(ref, "mysecret"),
+						testAccCheckClientExists(ref, defaultZoneId),
+						testAccCheckValidSecret(ref, "mysecret", defaultZoneId),
 						resource.TestCheckResourceAttr(ref, "client_id", clientid),
 						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
 						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
@@ -106,15 +129,15 @@ func TestAccClient_scope(t *testing.T) {
 }
 
 func TestAccClient_createError(t *testing.T) {
-	clientid := "my-name2"
+	clientId := "my-name2"
 
 	resource.Test(t,
 		resource.TestCase{
 			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
 			ProviderFactories: util.ProviderFactories,
-			CheckDestroy:      testAccCheckClientDestroy(clientid),
+			CheckDestroy:      testClientDestroyed(clientId),
 			Steps: []resource.TestStep{
-				resource.TestStep{
+				{
 					Config:      clientResourceWithoutSecret,
 					ExpectError: regexp.MustCompile(".*Client secret is required for client_credentials.*"),
 				},
@@ -122,7 +145,7 @@ func TestAccClient_createError(t *testing.T) {
 		})
 }
 
-func testAccCheckValidSecret(resource, secret string) resource.TestCheckFunc {
+func testAccCheckValidSecret(resource, secret, zoneId string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		rs, ok := s.RootModule().Resources[resource]
@@ -131,15 +154,20 @@ func testAccCheckValidSecret(resource, secret string) resource.TestCheckFunc {
 		}
 
 		id := rs.Primary.ID
+		subDomain := ""
+		if zoneId != "uaa" {
+			subDomain = zoneId
+		}
+
 		auth := util.UaaSession().AuthManager()
-		if _, err := auth.GetClientToken(id, secret); err != nil {
+		if _, err := auth.GetClientToken(id, secret, subDomain); err != nil {
 			return err
 		}
 		return nil
 	}
 }
 
-func testAccCheckClientExists(resource string) resource.TestCheckFunc {
+func testAccCheckClientExists(resource, zoneId string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resource]
 		if !ok {
@@ -151,7 +179,7 @@ func testAccCheckClientExists(resource string) resource.TestCheckFunc {
 		um := util.UaaSession().ClientManager()
 
 		// check client exists
-		_, err := um.GetClient(id)
+		_, err := um.GetClient(id, zoneId)
 		if err != nil {
 			return err
 		}
@@ -159,17 +187,26 @@ func testAccCheckClientExists(resource string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClientDestroy(id string) resource.TestCheckFunc {
+func testClientDestroyed(id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		um := util.UaaSession().ClientManager()
-		if _, err := um.FindByClientID(id); err != nil {
-			switch err.(type) {
-			case *errors.ModelNotFoundError:
-				return nil
-			default:
+		for _, zoneId := range []string{defaultZoneId, updatedZoneId} {
+			if err := testClientDestroyedInZone(id, zoneId); err != nil {
 				return err
 			}
 		}
-		return fmt.Errorf("client with id '%s' still exists in cloud foundry", id)
+		return nil
 	}
+}
+
+func testClientDestroyedInZone(id, zoneId string) error {
+	um := util.UaaSession().ClientManager()
+	if _, err := um.FindByClientID(id, zoneId); err != nil {
+		switch err.(type) {
+		case *errors.ModelNotFoundError:
+			return nil
+		default:
+			return err
+		}
+	}
+	return fmt.Errorf("client with id '%s' still exists in cloud foundry", id)
 }

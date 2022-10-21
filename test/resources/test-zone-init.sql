@@ -1,7 +1,7 @@
 create extension if not exists "uuid-ossp";
 
 insert into identity_zone (id, name, subdomain)
-    values ('test-zone', 'Test Zone', 'testzone')
+    values ('test-zone', 'Test Zone', 'test-zone')
     on conflict do nothing;
 
 insert into identity_provider (id, identity_zone_id, name, origin_key, type, config)

@@ -29,7 +29,9 @@ func readDataSource(ctx context.Context, data *schema.ResourceData, i interface{
 	)
 
 	id = data.Get(fields.ClientId.String()).(string)
-	client, err := um.FindByClientID(id)
+	zoneId := data.Get(fields.ZoneId.String()).(string)
+
+	client, err := um.FindByClientID(id, zoneId)
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -21,6 +21,7 @@ data uaa_group "mygroup" {
 The following arguments are supported:
 
 * `display_name` - (Required) The name of the group to look up
+* `zone_id` - (Optional) The identity zone that the group belongs to
 
 ## Attributes Reference
 
@@ -29,4 +30,3 @@ The following attributes are exported:
 * `id` - The GUID of the group
 * `display_name` - The name of the group
 * `description` - The description of the group
-* `zone_id` - The identity zone that the group belongs to

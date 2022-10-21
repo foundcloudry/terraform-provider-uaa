@@ -66,17 +66,21 @@ func newClientManager(config coreconfig.Reader, gateway net.Gateway, logger *Log
 	return
 }
 
-func (manager *ClientManager) GetClient(id string) (client *UAAClient, err error) {
+func (manager *ClientManager) GetClient(id, zoneId string) (client *UAAClient, err error) {
 
 	path := fmt.Sprintf("/oauth/clients/%s", id)
 	client = &UAAClient{}
-	err = manager.api.Get(path, &client)
+	err = manager.api.
+		WithZoneId(zoneId).
+		Get(path, &client)
 	return
 }
 
-func (manager *ClientManager) Create(newClient UAAClient) (client UAAClient, err error) {
+func (manager *ClientManager) Create(newClient UAAClient, zoneId string) (client UAAClient, err error) {
 
-	err = manager.api.Post("/oauth/clients", newClient, &client)
+	err = manager.api.
+		WithZoneId(zoneId).
+		Post("/oauth/clients", newClient, &client)
 	switch httpErr := err.(type) {
 	case errors.HTTPError:
 		if httpErr.StatusCode() == http.StatusConflict {
@@ -86,22 +90,26 @@ func (manager *ClientManager) Create(newClient UAAClient) (client UAAClient, err
 	return
 }
 
-func (manager *ClientManager) UpdateClient(updatedClient *UAAClient) (client UAAClient, err error) {
+func (manager *ClientManager) UpdateClient(updatedClient *UAAClient, zoneId string) (client UAAClient, err error) {
 
 	path := fmt.Sprintf("/oauth/clients/%s", updatedClient.ClientID)
-	if err := manager.api.Put(path, updatedClient, &client); err != nil {
+	if err := manager.api.
+		WithZoneId(zoneId).
+		Put(path, updatedClient, &client); err != nil {
 		return client, err
 	}
-
 	return
 }
 
-func (manager *ClientManager) DeleteClient(id string) error {
+func (manager *ClientManager) DeleteClient(id, zoneId string) (err error) {
 
-	return manager.api.Delete(fmt.Sprintf("/oauth/clients/%s", id))
+	err = manager.api.
+		WithZoneId(zoneId).
+		Delete(fmt.Sprintf("/oauth/clients/%s", id))
+	return
 }
 
-func (manager *ClientManager) ChangeSecret(id, oldSecret, newSecret string) (err error) {
+func (manager *ClientManager) ChangeSecret(id, oldSecret, newSecret, zoneId string) (err error) {
 
 	data := map[string]string{
 		"secret": newSecret,
@@ -114,16 +122,21 @@ func (manager *ClientManager) ChangeSecret(id, oldSecret, newSecret string) (err
 	path := fmt.Sprintf("/oauth/clients/%s/secret", id)
 	response := make(map[string]interface{})
 
-	return manager.api.Put(path, data, &response)
+	err = manager.api.
+		WithZoneId(zoneId).
+		Put(path, data, &response)
+	return
 }
 
-func (manager *ClientManager) FindByClientID(clientID string) (client UAAClient, err error) {
+func (manager *ClientManager) FindByClientID(clientID, zoneId string) (client UAAClient, err error) {
 
 	filter := url.QueryEscape(fmt.Sprintf(`client_id Eq "%s"`, clientID))
 	path := fmt.Sprintf("/oauth/clients?filter=%s", filter)
 
 	clientResourceList := &UAAClientResourceList{}
-	err = manager.api.Get(path, clientResourceList)
+	err = manager.api.
+		WithZoneId(zoneId).
+		Get(path, clientResourceList)
 
 	if err == nil {
 		if len(clientResourceList.Resources) > 0 {

@@ -38,7 +38,7 @@ func TestGroupResource_normal(t *testing.T) {
 		resource.TestCase{
 			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
 			ProviderFactories: util.ProviderFactories,
-			CheckDestroy:      testAccCheckGroupDestroy(originalDisplayName, updatedZoneId),
+			CheckDestroy:      testGroupDestroyed(originalDisplayName),
 			Steps: []resource.TestStep{
 				{
 					Config: createTestGroupResource(originalDisplayName, originalDescription, ""),
@@ -89,7 +89,7 @@ func TestGroupResource_createError(t *testing.T) {
 		resource.TestCase{
 			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
 			ProviderFactories: util.ProviderFactories,
-			CheckDestroy:      testAccCheckGroupDestroy(ref, defaultZoneId),
+			CheckDestroy:      testGroupDestroyed(ref),
 			Steps: []resource.TestStep{
 				{
 					Config:      createTestGroupResource("", originalDescription, defaultZoneId),
@@ -99,17 +99,27 @@ func TestGroupResource_createError(t *testing.T) {
 		})
 }
 
-func testAccCheckGroupDestroy(id, zoneId string) resource.TestCheckFunc {
+func testGroupDestroyed(id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		gm := util.UaaSession().GroupManager()
-		if _, err := gm.FindByDisplayName(id, zoneId); err != nil {
-			switch err.(type) {
-			case *errors.ModelNotFoundError:
-				return nil
-			default:
+		for _, zoneId := range []string{defaultZoneId, updatedZoneId} {
+			if err := testGroupDestroyedInZone(id, zoneId); err != nil {
 				return err
 			}
 		}
-		return fmt.Errorf("group with id '%s' still exists in cloud foundry", id)
+		return nil
 	}
+}
+
+func testGroupDestroyedInZone(id, zoneId string) error {
+
+	gm := util.UaaSession().GroupManager()
+	if _, err := gm.FindByDisplayName(id, zoneId); err != nil {
+		switch err.(type) {
+		case *errors.ModelNotFoundError:
+			return nil
+		default:
+			return err
+		}
+	}
+	return fmt.Errorf("group with id '%s' still exists in cloud foundry", id)
 }
