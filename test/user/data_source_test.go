@@ -23,7 +23,7 @@ func TestUserDataSource(t *testing.T) {
 
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			Steps: []resource.TestStep{
 				{

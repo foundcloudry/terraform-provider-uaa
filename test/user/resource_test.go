@@ -48,7 +48,7 @@ func TestAccUser_LdapOrigin_normal(t *testing.T) {
 
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testAccCheckUserDestroyed(username),
 			Steps: []resource.TestStep{
@@ -73,7 +73,7 @@ func TestAccUser_WithGroups_normal(t *testing.T) {
 
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testAccCheckUserDestroyed(username),
 			Steps: []resource.TestStep{

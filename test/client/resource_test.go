@@ -11,9 +11,6 @@ import (
 	"testing"
 )
 
-// TODO: when dns is figured out for containerized tests, remove this constant; just use `test.UpdatedZoneId` directly
-const updatedZoneId = test.DefaultZoneId
-
 const clientResource = `
 resource "uaa_client" "client1" {
     client_id = "my-name"
@@ -38,7 +35,7 @@ resource "uaa_client" "client1" {
     authorized_grant_types = [ "client_credentials" ]
     redirect_uri = [ "https://uaa.local.pcfdev.io/login" ]
     client_secret = "newsecret"
-	zone_id = "` + updatedZoneId + `"
+	zone_id = "` + test.UpdatedZoneId + `"
 }
 `
 
@@ -66,7 +63,10 @@ func TestAccClient_normal(t *testing.T) {
 
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck: func() {
+				util.VerifyEnvironmentVariablesAreSet(t)
+				util.WarnIfTestZoneSubDomainDoesNotResolve(t)
+			},
 			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testClientDestroyed(clientid),
 			Steps: []resource.TestStep{
@@ -93,8 +93,8 @@ func TestAccClient_normal(t *testing.T) {
 				{
 					Config: clientResourceUpdateZone,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckClientExists(ref, updatedZoneId),
-						testAccCheckValidSecret(ref, "newsecret", updatedZoneId),
+						testAccCheckClientExists(ref, test.UpdatedZoneId),
+						testAccCheckValidSecret(ref, "newsecret", test.UpdatedZoneId),
 						resource.TestCheckResourceAttr(ref, "client_id", clientid),
 						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
 						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
@@ -110,7 +110,7 @@ func TestAccClient_scope(t *testing.T) {
 
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testClientDestroyed(clientid),
 			Steps: []resource.TestStep{
@@ -134,7 +134,7 @@ func TestAccClient_createError(t *testing.T) {
 
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testClientDestroyed(clientId),
 			Steps: []resource.TestStep{

@@ -27,7 +27,7 @@ func TestAccDataSourceClient_normal(t *testing.T) {
 	ref := "data.uaa_client.admin-client"
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			Steps: []resource.TestStep{
 				resource.TestStep{
@@ -53,7 +53,7 @@ func TestAccDataSourceClient_normal(t *testing.T) {
 func TestAccDataSourceClient_notfound(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			Steps: []resource.TestStep{
 				resource.TestStep{

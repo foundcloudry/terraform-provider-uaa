@@ -27,7 +27,7 @@ func TestGroupDataSourceClient_normal(t *testing.T) {
 
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			Steps: []resource.TestStep{
 				{
@@ -47,7 +47,7 @@ func TestGroupDataSourceClient_normal(t *testing.T) {
 func TestGroupDataSourceClient_notFound(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			Steps: []resource.TestStep{
 				{

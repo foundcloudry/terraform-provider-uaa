@@ -34,7 +34,7 @@ func createTestResource(name, subDomain string) string {
 func TestResource_normal(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testCheckDestroyed(),
 			Steps: []resource.TestStep{
@@ -72,7 +72,7 @@ func TestResource_normal(t *testing.T) {
 func TestResource_createError(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testCheckDestroyed(),
 			Steps: []resource.TestStep{

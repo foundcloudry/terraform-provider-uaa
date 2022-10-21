@@ -35,7 +35,7 @@ func createTestGroupResource(displayName, description, zoneId string) string {
 func TestGroupResource_normal(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testGroupDestroyed(originalDisplayName),
 			Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func TestGroupResource_normal(t *testing.T) {
 func TestGroupResource_createError(t *testing.T) {
 	resource.Test(t,
 		resource.TestCase{
-			PreCheck:          func() { util.IntegrationTestPreCheck(t) },
+			PreCheck:          func() { util.VerifyEnvironmentVariablesAreSet(t) },
 			ProviderFactories: util.ProviderFactories,
 			CheckDestroy:      testGroupDestroyed(ref),
 			Steps: []resource.TestStep{
