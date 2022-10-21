@@ -11,6 +11,9 @@ import (
 	"testing"
 )
 
+// TODO: when dns is figured out for containerized tests, remove this constant; just use `test.UpdatedZoneId` directly
+const updatedZoneId = test.DefaultZoneId
+
 const clientResource = `
 resource "uaa_client" "client1" {
     client_id = "my-name"
@@ -35,7 +38,7 @@ resource "uaa_client" "client1" {
     authorized_grant_types = [ "client_credentials" ]
     redirect_uri = [ "https://uaa.local.pcfdev.io/login" ]
     client_secret = "newsecret"
-	zone_id = "` + test.UpdatedZoneId + `"
+	zone_id = "` + updatedZoneId + `"
 }
 `
 
@@ -90,8 +93,8 @@ func TestAccClient_normal(t *testing.T) {
 				{
 					Config: clientResourceUpdateZone,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckClientExists(ref, test.UpdatedZoneId),
-						testAccCheckValidSecret(ref, "newsecret", test.UpdatedZoneId),
+						testAccCheckClientExists(ref, updatedZoneId),
+						testAccCheckValidSecret(ref, "newsecret", updatedZoneId),
 						resource.TestCheckResourceAttr(ref, "client_id", clientid),
 						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
 						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
