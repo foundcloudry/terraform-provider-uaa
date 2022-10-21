@@ -13,11 +13,12 @@ import (
 )
 
 type UserManager struct {
-	log           *Logger
-	api           *UaaApi
-	clientToken   string
-	groupMap      map[string]map[string]string
-	defaultGroups map[string]map[string]int
+	log                 *Logger
+	api                 *UaaApi
+	identityZoneManager *IdentityZoneManager
+	clientToken         string
+	groupMap            map[string]map[string]string
+	defaultGroups       map[string]map[string]int
 }
 
 type UAAUser struct {
@@ -50,7 +51,7 @@ type UAAUserGroup struct {
 	Type    string `json:"type"`
 }
 
-func newUserManager(config coreconfig.Reader, gateway net.Gateway, logger *Logger) (um *UserManager, err error) {
+func newUserManager(config coreconfig.Reader, gateway net.Gateway, identityZoneManager *IdentityZoneManager, logger *Logger) (um *UserManager, err error) {
 
 	api, err := newUaaApi(config, gateway)
 	if err != nil {
@@ -58,10 +59,11 @@ func newUserManager(config coreconfig.Reader, gateway net.Gateway, logger *Logge
 	}
 
 	um = &UserManager{
-		log:           logger,
-		api:           api,
-		groupMap:      make(map[string]map[string]string),
-		defaultGroups: make(map[string]map[string]int),
+		log:                 logger,
+		api:                 api,
+		identityZoneManager: identityZoneManager,
+		groupMap:            make(map[string]map[string]string),
+		defaultGroups:       make(map[string]map[string]int),
 	}
 	return
 }
@@ -88,29 +90,13 @@ func (um *UserManager) loadGroups(zoneId string) (err error) {
 		um.groupMap[zoneId][r.DisplayName] = r.Id
 	}
 
-	// Retrieve default scope/groups for a new user by creating
-	// a dummy user and extracting the default scope of that user
-	username, err := newUUID()
-	if err != nil {
-		return
-	}
-	userResource := UAAUser{
-		Username: username,
-		Password: "password",
-		Origin:   "uaa",
-		Emails:   []UAAUserEmail{{Value: "email@domain.com"}},
-	}
-	user := &UAAUser{}
-	err = uaaApi.Post("/Users", userResource, user)
+	// Retrieve the default groups for the identity zone
+	identityZone, err := um.identityZoneManager.FindById(zoneId)
 	if err != nil {
 		return err
 	}
-	err = uaaApi.Delete(fmt.Sprintf("/Users/%s", user.Id))
-	if err != nil {
-		return err
-	}
-	for _, g := range user.Groups {
-		um.defaultGroups[zoneId][g.Display] = 1
+	for _, g := range identityZone.Config.UserConfig.DefaultGroups {
+		um.defaultGroups[zoneId][g] = 1
 	}
 
 	return

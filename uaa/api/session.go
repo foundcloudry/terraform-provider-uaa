@@ -73,7 +73,12 @@ func NewSession(config *Config) (s *Session, err error) {
 	s.authManager = NewAuthManager(s.uaaGateway, s.config, net.NewRequestDumper(s.Log.TracePrinter))
 	//s.uaaGateway.SetTokenRefresher(s.authManager)
 
-	s.userManager, err = newUserManager(s.config, s.uaaGateway, s.Log)
+	s.identityZoneManger, err = newIdentityZoneManager(s.config, s.uaaGateway, s.Log)
+	if err != nil {
+		return nil, err
+	}
+
+	s.userManager, err = newUserManager(s.config, s.uaaGateway, s.identityZoneManger, s.Log)
 	if err != nil {
 		return nil, err
 	}
@@ -84,11 +89,6 @@ func NewSession(config *Config) (s *Session, err error) {
 	}
 
 	s.clientManager, err = newClientManager(s.config, s.uaaGateway, s.Log)
-	if err != nil {
-		return nil, err
-	}
-
-	s.identityZoneManger, err = newIdentityZoneManager(s.config, s.uaaGateway, s.Log)
 	if err != nil {
 		return nil, err
 	}
