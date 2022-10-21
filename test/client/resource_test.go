@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jlpospisil/terraform-provider-uaa/test"
 	"github.com/jlpospisil/terraform-provider-uaa/test/util"
 	"regexp"
 	"testing"
 )
-
-const defaultZoneId = "uaa"
-const updatedZoneId = "uaa" // TODO: this actually needs to be "test-zone" once routing/auth is figured out for containerized tests
 
 const clientResource = `
 resource "uaa_client" "client1" {
@@ -37,7 +35,7 @@ resource "uaa_client" "client1" {
     authorized_grant_types = [ "client_credentials" ]
     redirect_uri = [ "https://uaa.local.pcfdev.io/login" ]
     client_secret = "newsecret"
-	zone_id = "` + updatedZoneId + `"
+	zone_id = "` + test.UpdatedZoneId + `"
 }
 `
 
@@ -72,8 +70,8 @@ func TestAccClient_normal(t *testing.T) {
 				{
 					Config: clientResource,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckClientExists(ref, defaultZoneId),
-						testAccCheckValidSecret(ref, "mysecret", defaultZoneId),
+						testAccCheckClientExists(ref, test.DefaultZoneId),
+						testAccCheckValidSecret(ref, "mysecret", test.DefaultZoneId),
 						resource.TestCheckResourceAttr(ref, "client_id", clientid),
 						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
 						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
@@ -82,8 +80,8 @@ func TestAccClient_normal(t *testing.T) {
 				{
 					Config: clientResourceUpdateSecret,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckClientExists(ref, defaultZoneId),
-						testAccCheckValidSecret(ref, "newsecret", defaultZoneId),
+						testAccCheckClientExists(ref, test.DefaultZoneId),
+						testAccCheckValidSecret(ref, "newsecret", test.DefaultZoneId),
 						resource.TestCheckResourceAttr(ref, "client_id", clientid),
 						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
 						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
@@ -92,8 +90,8 @@ func TestAccClient_normal(t *testing.T) {
 				{
 					Config: clientResourceUpdateZone,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckClientExists(ref, updatedZoneId),
-						testAccCheckValidSecret(ref, "newsecret", updatedZoneId),
+						testAccCheckClientExists(ref, test.UpdatedZoneId),
+						testAccCheckValidSecret(ref, "newsecret", test.UpdatedZoneId),
 						resource.TestCheckResourceAttr(ref, "client_id", clientid),
 						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
 						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
@@ -116,8 +114,8 @@ func TestAccClient_scope(t *testing.T) {
 				{
 					Config: clientResourceWithScope,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckClientExists(ref, defaultZoneId),
-						testAccCheckValidSecret(ref, "mysecret", defaultZoneId),
+						testAccCheckClientExists(ref, test.DefaultZoneId),
+						testAccCheckValidSecret(ref, "mysecret", test.DefaultZoneId),
 						resource.TestCheckResourceAttr(ref, "client_id", clientid),
 						util.TestCheckResourceSet(ref, "authorized_grant_types", []string{"client_credentials"}),
 						util.TestCheckResourceSet(ref, "redirect_uri", []string{"https://uaa.local.pcfdev.io/login"}),
@@ -189,7 +187,7 @@ func testAccCheckClientExists(resource, zoneId string) resource.TestCheckFunc {
 
 func testClientDestroyed(id string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for _, zoneId := range []string{defaultZoneId, updatedZoneId} {
+		for _, zoneId := range []string{test.DefaultZoneId, test.UpdatedZoneId} {
 			if err := testClientDestroyedInZone(id, zoneId); err != nil {
 				return err
 			}

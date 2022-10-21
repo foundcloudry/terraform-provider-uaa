@@ -3,6 +3,7 @@ package api
 import (
 	"crypto/rand"
 	"fmt"
+	"github.com/jlpospisil/terraform-provider-uaa/uaa/envvars"
 	"io"
 	"os"
 	"strconv"
@@ -50,10 +51,10 @@ func NewSession(config *Config) (s *Session, err error) {
 
 	s = &Session{}
 
-	envDialTimeout := os.Getenv("UAA_DIAL_TIMEOUT")
+	envDialTimeout := os.Getenv(envvars.UaaDialTimeout.String())
 
-	debug, _ := strconv.ParseBool(os.Getenv("UAA_DEBUG"))
-	s.Log = NewLogger(debug, os.Getenv("UAA_TRACE"))
+	debug, _ := strconv.ParseBool(os.Getenv(envvars.UaaDebug.String()))
+	s.Log = NewLogger(debug, os.Getenv(envvars.UaaTrace.String()))
 
 	s.config = coreconfig.NewRepositoryFromPersistor(newNoopPersistor(), func(err error) {
 		if err != nil {

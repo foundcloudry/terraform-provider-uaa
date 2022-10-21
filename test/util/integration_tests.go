@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
+	"github.com/jlpospisil/terraform-provider-uaa/uaa/envvars"
 	"github.com/jlpospisil/terraform-provider-uaa/uaa/provider"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -31,13 +33,18 @@ func IntegrationTestPreCheck(t *testing.T) {
 
 func testAccEnvironmentSet() bool {
 
-	loginEndpoint := os.Getenv("UAA_LOGIN_URL")
-	authEndpoint := os.Getenv("UAA_AUTH_URL")
-	clientID := os.Getenv("UAA_CLIENT_ID")
-	clientSecret := os.Getenv("UAA_CLIENT_SECRET")
+	loginEndpoint := os.Getenv(envvars.UaaLoginUrl.String())
+	authEndpoint := os.Getenv(envvars.UaaAuthUrl.String())
+	clientID := os.Getenv(envvars.UaaClientId.String())
+	clientSecret := os.Getenv(envvars.UaaClientSecret.String())
 
 	if len(loginEndpoint) == 0 || len(authEndpoint) == 0 || len(clientID) == 0 || len(clientSecret) == 0 {
-		envVars := "UAA_LOGIN_URL, UAA_AUTH_URL, UAA_CLIENT_ID, UAA_CLIENT_SECRET"
+		envVars := strings.Join([]string{
+			envvars.UaaLoginUrl.String(),
+			envvars.UaaAuthUrl.String(),
+			envvars.UaaClientId.String(),
+			envvars.UaaClientSecret.String(),
+		}, ", ")
 		fmt.Println(envVars + " must be set when running tests.")
 		return false
 	}

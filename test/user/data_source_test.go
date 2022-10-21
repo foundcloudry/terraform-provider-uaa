@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jlpospisil/terraform-provider-uaa/test"
 	"github.com/jlpospisil/terraform-provider-uaa/test/util"
 	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
 	"testing"
@@ -28,7 +29,7 @@ func TestUserDataSource(t *testing.T) {
 				{
 					Config: userDataResource,
 					Check: resource.ComposeTestCheckFunc(
-						checkDataSourceUserExists(ref, defaultZoneId),
+						checkDataSourceUserExists(ref, test.DefaultZoneId),
 						resource.TestCheckResourceAttr(
 							ref, "name", "admin"),
 					),

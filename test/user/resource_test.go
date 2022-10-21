@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/jlpospisil/terraform-provider-uaa/test"
 	"github.com/jlpospisil/terraform-provider-uaa/test/util"
 	"testing"
 )
-
-const defaultZoneId = "uaa"
-const updatedZoneId = "test-zone"
 
 const ldapUserResource = `
 
@@ -25,7 +23,7 @@ const userResourceWithGroups = `
 resource "uaa_user" "admin-service-user" {
 	name = "cf-admin"
 	password = "qwerty"
-	zone_id = "` + defaultZoneId + `"
+	zone_id = "` + test.DefaultZoneId + `"
 	given_name = "Build"
 	family_name = "User"
 	groups = [ "cloud_controller.admin", "scim.read", "scim.write" ]
@@ -37,7 +35,7 @@ const userResourceWithGroupsUpdate = `
 resource "uaa_user" "admin-service-user" {
 	name = "cf-admin"
 	password = "asdfg"
-	zone_id = "` + updatedZoneId + `"
+	zone_id = "` + test.UpdatedZoneId + `"
 	email = "cf-admin@acme.com"
 	groups = [ "cloud_controller.admin", "clients.admin", "uaa.admin", "doppler.firehose" ]
 }
@@ -57,11 +55,11 @@ func TestAccUser_LdapOrigin_normal(t *testing.T) {
 				{
 					Config: ldapUserResource,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckUserExists(ref, defaultZoneId),
+						testAccCheckUserExists(ref, test.DefaultZoneId),
 						resource.TestCheckResourceAttr(ref, "name", username),
 						resource.TestCheckResourceAttr(ref, "origin", "ldap"),
 						resource.TestCheckResourceAttr(ref, "email", username),
-						resource.TestCheckResourceAttr(ref, "zone_id", defaultZoneId),
+						resource.TestCheckResourceAttr(ref, "zone_id", test.DefaultZoneId),
 					),
 				},
 			},
@@ -82,11 +80,11 @@ func TestAccUser_WithGroups_normal(t *testing.T) {
 				{
 					Config: userResourceWithGroups,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckUserExists(ref, defaultZoneId),
+						testAccCheckUserExists(ref, test.DefaultZoneId),
 						resource.TestCheckResourceAttr(ref, "name", username),
 						resource.TestCheckResourceAttr(ref, "password", "qwerty"),
 						resource.TestCheckResourceAttr(ref, "email", username),
-						resource.TestCheckResourceAttr(ref, "zone_id", defaultZoneId),
+						resource.TestCheckResourceAttr(ref, "zone_id", test.DefaultZoneId),
 						util.TestCheckResourceSet(ref, "groups", []string{
 							"cloud_controller.admin",
 							"scim.read",
@@ -98,11 +96,11 @@ func TestAccUser_WithGroups_normal(t *testing.T) {
 				{
 					Config: userResourceWithGroupsUpdate,
 					Check: resource.ComposeTestCheckFunc(
-						testAccCheckUserExists(ref, updatedZoneId),
+						testAccCheckUserExists(ref, test.UpdatedZoneId),
 						resource.TestCheckResourceAttr(ref, "name", "cf-admin"),
 						resource.TestCheckResourceAttr(ref, "password", "asdfg"),
 						resource.TestCheckResourceAttr(ref, "email", "cf-admin@acme.com"),
-						resource.TestCheckResourceAttr(ref, "zone_id", updatedZoneId),
+						resource.TestCheckResourceAttr(ref, "zone_id", test.UpdatedZoneId),
 						util.TestCheckResourceSet(ref, "groups", []string{
 							"clients.admin",
 							"cloud_controller.admin",
@@ -179,7 +177,7 @@ func testAccCheckUserDestroyed(username string) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
 
-		for _, zoneId := range []string{defaultZoneId, updatedZoneId} {
+		for _, zoneId := range []string{test.DefaultZoneId, test.UpdatedZoneId} {
 			if err := testCheckUserDoesNotExistInZone(username, zoneId); err != nil {
 				return err
 			}

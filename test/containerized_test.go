@@ -5,6 +5,7 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/jlpospisil/terraform-provider-uaa/uaa/envvars"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
@@ -132,11 +133,11 @@ func (uaaTestManager *integrationTestManager) prepareUaaContainer() {
 	}
 	endpoint = "http://" + strings.Split(endpoint, "://")[1]
 
-	os.Setenv("UAA_AUTH_URL", endpoint)
-	os.Setenv("UAA_LOGIN_URL", endpoint)
-	os.Setenv("UAA_CLIENT_ID", "admin")
-	os.Setenv("UAA_CLIENT_SECRET", "adminsecret")
-	os.Setenv("UAA_SKIP_SSL_VALIDATION", "1")
+	os.Setenv(envvars.UaaAuthUrl.String(), endpoint)
+	os.Setenv(envvars.UaaLoginUrl.String(), endpoint)
+	os.Setenv(envvars.UaaClientId.String(), "admin")
+	os.Setenv(envvars.UaaClientSecret.String(), "adminsecret")
+	os.Setenv(envvars.UaaSkipSslValidation.String(), "1")
 }
 
 func (uaaTestManager *integrationTestManager) createTestIdentityZone() {
