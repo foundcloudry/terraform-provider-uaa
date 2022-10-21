@@ -7,25 +7,19 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v3
 
-      - name: set up go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.19
+      - name: Unshallow
+        run: git fetch --prune --unshallow
 
-      - name: cache go modules
-        uses: actions/cache@v1
+      - name: Set up Go
+        uses: actions/setup-go@v3
         with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          go-version-file: 'go.mod'
+          cache: true
 
-      - name: tests
+      - name: Integration Tests
         run: |
           make test
 
