@@ -34,7 +34,7 @@ func newUaaApi(config coreconfig.Reader, gateway net.Gateway) (*UaaApi, error) {
 }
 
 func (api *UaaApi) WithHeaders(headers map[string]string) *UaaApi {
-	var additionalHeaders map[string]string
+	additionalHeaders := make(map[string]string)
 
 	for i, v := range api.additionalHeaders {
 		additionalHeaders[i] = v

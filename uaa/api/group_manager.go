@@ -1,11 +1,9 @@
 package api
 
 import (
-	"bytes"
 	"code.cloudfoundry.org/cli/cf/configuration/coreconfig"
 	"code.cloudfoundry.org/cli/cf/errors"
 	"code.cloudfoundry.org/cli/cf/net"
-	"encoding/json"
 	"fmt"
 	apiheaders "github.com/jlpospisil/terraform-provider-uaa/uaa/api/headers"
 	"net/http"
@@ -13,9 +11,8 @@ import (
 )
 
 type GroupManager struct {
-	log        *Logger
-	config     coreconfig.Reader
-	uaaGateway net.Gateway
+	log *Logger
+	api *UaaApi
 }
 
 type UAAGroup struct {
@@ -29,21 +26,21 @@ type UAAGroupResourceList struct {
 	Resources []UAAGroup `json:"resources"`
 }
 
-func newGroupManager(config coreconfig.Reader, uaaGateway net.Gateway, logger *Logger) (gm *GroupManager, err error) {
+func newGroupManager(config coreconfig.Reader, gateway net.Gateway, logger *Logger) (gm *GroupManager, err error) {
+
+	api, err := newUaaApi(config, gateway)
+	if err != nil {
+		return
+	}
+
 	gm = &GroupManager{
-		log:        logger,
-		config:     config,
-		uaaGateway: uaaGateway,
+		log: logger,
+		api: api,
 	}
 	return
 }
 
-func (gm *GroupManager) CreateGroup(displayName string, description string, zoneId string) (group *UAAGroup, err error) {
-	uaaEndpoint := gm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
+func (manager *GroupManager) CreateGroup(displayName string, description string, zoneId string) (group *UAAGroup, err error) {
 
 	groupResource := UAAGroup{
 		DisplayName: displayName,
@@ -51,24 +48,12 @@ func (gm *GroupManager) CreateGroup(displayName string, description string, zone
 		ZoneId:      zoneId,
 	}
 
-	body, err := json.Marshal(groupResource)
-	if err != nil {
-		return
-	}
-
-	request, err := gm.uaaGateway.NewRequest(
-		"POST",
-		fmt.Sprintf("%s/Groups", uaaEndpoint),
-		gm.config.AccessToken(),
-		bytes.NewReader(body),
-	)
+	err = manager.api.
+		WithZoneId(zoneId).
+		Post("/Groups", groupResource, &group)
 	if err != nil {
 		return nil, err
 	}
-	request.HTTPReq.Header.Set(apiheaders.ZoneId.String(), zoneId)
-
-	group = &UAAGroup{}
-	_, err = gm.uaaGateway.PerformRequestForJSONResponse(request, group)
 
 	switch httpErr := err.(type) {
 	case errors.HTTPError:
@@ -76,119 +61,53 @@ func (gm *GroupManager) CreateGroup(displayName string, description string, zone
 			err = errors.NewModelAlreadyExistsError("group", displayName)
 		}
 	}
-	return
-}
-
-func (gm *GroupManager) GetGroup(id, zoneId string) (group *UAAGroup, err error) {
-	uaaEndpoint := gm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
-
-	request, err := gm.uaaGateway.NewRequest(
-		"GET",
-		fmt.Sprintf("%s/Groups/%s", uaaEndpoint, id),
-		gm.config.AccessToken(),
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-	request.HTTPReq.Header.Set(apiheaders.ZoneId.String(), zoneId)
-
-	group = &UAAGroup{}
-	_, err = gm.uaaGateway.PerformRequestForJSONResponse(request, group)
 
 	return
 }
 
-func (gm *GroupManager) UpdateGroup(id, displayName, description, zoneId string) (group *UAAGroup, err error) {
+func (manager *GroupManager) GetGroup(id, zoneId string) (group *UAAGroup, err error) {
 
-	uaaEndpoint := gm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
+	path := fmt.Sprintf("/Groups/%s", id)
+	err = manager.api.
+		WithZoneId(zoneId).
+		Get(path, &group)
+
+	return
+}
+
+func (manager *GroupManager) UpdateGroup(id, displayName, description, zoneId string) (group *UAAGroup, err error) {
 
 	groupResource := UAAGroup{
 		DisplayName: displayName,
 		Description: description,
 	}
 
-	body, err := json.Marshal(groupResource)
-	if err != nil {
-		return
-	}
-
-	request, err := gm.uaaGateway.NewRequest(
-		"PUT",
-		fmt.Sprintf("%s/Groups/%s", uaaEndpoint, id),
-		gm.config.AccessToken(),
-		bytes.NewReader(body),
-	)
-	if err != nil {
-		return nil, err
-	}
-	request.HTTPReq.Header.Set(apiheaders.IfMatch.String(), "*")
-	request.HTTPReq.Header.Set(apiheaders.ZoneId.String(), zoneId)
-
-	group = &UAAGroup{}
-	_, err = gm.uaaGateway.PerformRequestForJSONResponse(request, group)
+	path := fmt.Sprintf("/Groups/%s", id)
+	err = manager.api.
+		WithZoneId(zoneId).
+		WithHeaders(map[string]string{
+			apiheaders.IfMatch.String(): "*",
+		}).
+		Put(path, groupResource, &group)
 
 	return
 }
 
-func (gm *GroupManager) DeleteGroup(id, zoneId string) (err error) {
+func (manager *GroupManager) DeleteGroup(id, zoneId string) error {
 
-	uaaEndpoint := gm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
-
-	request, err := gm.uaaGateway.NewRequest(
-		"DELETE",
-		fmt.Sprintf("%s/Groups/%s", uaaEndpoint, id),
-		gm.config.AccessToken(),
-		nil,
-	)
-	if err != nil {
-		return err
-	}
-	request.HTTPReq.Header.Set(apiheaders.ZoneId.String(), zoneId)
-	_, err = gm.uaaGateway.PerformRequest(request)
-
-	return
+	path := fmt.Sprintf("/Groups/%s", id)
+	return manager.api.WithZoneId(zoneId).Delete(path)
 }
 
-func (gm *GroupManager) FindByDisplayName(displayName, zoneId string) (group *UAAGroup, err error) {
-
-	uaaEndpoint := gm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
+func (manager *GroupManager) FindByDisplayName(displayName, zoneId string) (group *UAAGroup, err error) {
 
 	displayNameFilter := url.QueryEscape(fmt.Sprintf(`displayName Eq "%s"`, displayName))
-	path := fmt.Sprintf("%s/Groups?filter=%s", uaaEndpoint, displayNameFilter)
-
-	request, err := gm.uaaGateway.NewRequest(
-		"GET",
-		path,
-		gm.config.AccessToken(),
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-	request.HTTPReq.Header.Set(apiheaders.ZoneId.String(), zoneId)
+	path := fmt.Sprintf("/Groups?filter=%s", displayNameFilter)
 
 	groupResourceList := &UAAGroupResourceList{}
-	_, err = gm.uaaGateway.PerformRequestForJSONResponse(request, groupResourceList)
-	if err != nil {
-		return nil, err
-	}
+	err = manager.api.
+		WithZoneId(zoneId).
+		Get(path, groupResourceList)
 
 	if err == nil {
 		if len(groupResourceList.Resources) > 0 {
