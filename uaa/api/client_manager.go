@@ -1,8 +1,6 @@
 package api
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -12,16 +10,11 @@ import (
 	"code.cloudfoundry.org/cli/cf/net"
 )
 
-// ClientManager -
 type ClientManager struct {
-	log        *Logger
-	config     coreconfig.Reader
-	uaaGateway net.Gateway
+	log *Logger
+	api *UaaApi
 }
 
-// ClientSecret         string   `json:"client_secret,omitempty"`
-
-// UAAClient -
 type UAAClient struct {
 	ClientID             string   `json:"client_id,omitempty"`
 	ClientSecret         string   `json:"client_secret,omitempty"`
@@ -59,102 +52,56 @@ func (c *UAAClient) HasDefaultResourceIds() bool {
 	return len(c.ResourceIds) == 1 && c.ResourceIds[0] == "none"
 }
 
-// NewClientManager -
-func newClientManager(config coreconfig.Reader, uaaGateway net.Gateway, logger *Logger) (cm *ClientManager, err error) {
-	cm = &ClientManager{
-		log:        logger,
-		config:     config,
-		uaaGateway: uaaGateway,
-	}
-	return
-}
+func newClientManager(config coreconfig.Reader, gateway net.Gateway, logger *Logger) (cm *ClientManager, err error) {
 
-// GetClient -
-func (cm *ClientManager) GetClient(id string) (client *UAAClient, err error) {
-	uaaEndpoint := cm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
-
-	client = &UAAClient{}
-	err = cm.uaaGateway.GetResource(
-		fmt.Sprintf("%s/oauth/clients/%s", uaaEndpoint, id),
-		client)
-	return
-}
-
-func (cm *ClientManager) UaaEndPoint() string {
-	return cm.config.UaaEndpoint()
-}
-
-// CreateClient -
-func (cm *ClientManager) Create(nCli UAAClient) (client UAAClient, err error) {
-	uaaEndpoint := cm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
-
-	body, err := json.Marshal(nCli)
+	api, err := newUaaApi(config, gateway)
 	if err != nil {
 		return
 	}
 
-	client = nCli
-	err = cm.uaaGateway.CreateResource(uaaEndpoint, "/oauth/clients", bytes.NewReader(body), &client)
+	cm = &ClientManager{
+		log: logger,
+		api: api,
+	}
+	return
+}
+
+func (manager *ClientManager) GetClient(id string) (client *UAAClient, err error) {
+
+	path := fmt.Sprintf("/oauth/clients/%s", id)
+	client = &UAAClient{}
+	err = manager.api.Get(path, &client)
+	return
+}
+
+func (manager *ClientManager) Create(newClient UAAClient) (client UAAClient, err error) {
+
+	err = manager.api.Post("/oauth/clients", newClient, &client)
 	switch httpErr := err.(type) {
 	case errors.HTTPError:
 		if httpErr.StatusCode() == http.StatusConflict {
-			err = errors.NewModelAlreadyExistsError("client", nCli.ClientID)
+			err = errors.NewModelAlreadyExistsError("client", newClient.ClientID)
 		}
 	}
 	return
 }
 
-// UpdateClient -
-func (cm *ClientManager) UpdateClient(nCli *UAAClient) (client UAAClient, err error) {
-	uaaEndpoint := cm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
+func (manager *ClientManager) UpdateClient(updatedClient *UAAClient) (client UAAClient, err error) {
+
+	path := fmt.Sprintf("/oauth/clients/%s", updatedClient.ClientID)
+	if err := manager.api.Put(path, updatedClient, &client); err != nil {
+		return client, err
 	}
 
-	body, err := json.Marshal(nCli)
-	if err != nil {
-		return
-	}
-
-	request, err := cm.uaaGateway.NewRequest("PUT",
-		fmt.Sprintf("%s/oauth/clients/%s", uaaEndpoint, nCli.ClientID),
-		cm.config.AccessToken(), bytes.NewReader(body))
-	if err != nil {
-		return
-	}
-
-	client = *nCli
-	_, err = cm.uaaGateway.PerformRequestForJSONResponse(request, client)
 	return
 }
 
-// DeleteClient -
-func (cm *ClientManager) DeleteClient(id string) (err error) {
-	uaaEndpoint := cm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
-	err = cm.uaaGateway.DeleteResource(uaaEndpoint, fmt.Sprintf("/oauth/clients/%s", id))
-	return
+func (manager *ClientManager) DeleteClient(id string) error {
+
+	return manager.api.Delete(fmt.Sprintf("/oauth/clients/%s", id))
 }
 
-// ChangePassword -
-func (cm *ClientManager) ChangeSecret(id, oldSecret, newSecret string) (err error) {
-	uaaEndpoint := cm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
+func (manager *ClientManager) ChangeSecret(id, oldSecret, newSecret string) (err error) {
 
 	data := map[string]string{
 		"secret": newSecret,
@@ -164,39 +111,19 @@ func (cm *ClientManager) ChangeSecret(id, oldSecret, newSecret string) (err erro
 		data["oldSecret"] = oldSecret
 	}
 
-	body, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-
-	request, err := cm.uaaGateway.NewRequest("PUT",
-		uaaEndpoint+fmt.Sprintf("/oauth/clients/%s/secret", id),
-		cm.config.AccessToken(), bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-
+	path := fmt.Sprintf("/oauth/clients/%s/secret", id)
 	response := make(map[string]interface{})
-	_, err = cm.uaaGateway.PerformRequestForJSONResponse(request, response)
-	if err != nil {
-		return err
-	}
-	return
+
+	return manager.api.Put(path, data, &response)
 }
 
-// FindByClientID -
-func (cm *ClientManager) FindByClientID(clientID string) (client UAAClient, err error) {
-	uaaEndpoint := cm.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		err = errors.New("UAA endpoint missing from config file")
-		return
-	}
+func (manager *ClientManager) FindByClientID(clientID string) (client UAAClient, err error) {
 
 	filter := url.QueryEscape(fmt.Sprintf(`client_id Eq "%s"`, clientID))
-	path := fmt.Sprintf("%s/oauth/clients?filter=%s", uaaEndpoint, filter)
+	path := fmt.Sprintf("/oauth/clients?filter=%s", filter)
 
 	clientResourceList := &UAAClientResourceList{}
-	err = cm.uaaGateway.GetResource(path, clientResourceList)
+	err = manager.api.Get(path, clientResourceList)
 
 	if err == nil {
 		if len(clientResourceList.Resources) > 0 {
