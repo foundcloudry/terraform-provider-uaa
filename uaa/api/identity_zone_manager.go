@@ -1,62 +1,48 @@
 package api
 
 import (
-	"bytes"
 	"code.cloudfoundry.org/cli/cf/configuration/coreconfig"
 	"code.cloudfoundry.org/cli/cf/errors"
 	"code.cloudfoundry.org/cli/cf/net"
-	"encoding/json"
 	"fmt"
 	"net/url"
 )
 
 type IdentityZoneManager struct {
-	log        *Logger
-	config     coreconfig.Reader
-	uaaGateway net.Gateway
+	log *Logger
+	api *UaaApi
 }
 
-func newIdentityZoneManager(config coreconfig.Reader, uaaGateway net.Gateway, logger *Logger) (izm *IdentityZoneManager, err error) {
+func newIdentityZoneManager(config coreconfig.Reader, gateway net.Gateway, logger *Logger) (izm *IdentityZoneManager, err error) {
+
+	api, err := newUaaApi(config, gateway)
+	if err != nil {
+		return
+	}
 
 	izm = &IdentityZoneManager{
-		log:        logger,
-		config:     config,
-		uaaGateway: uaaGateway,
+		log: logger,
+		api: api,
 	}
 	return
 }
 
 // CRUD methods
 
-func (api *IdentityZoneManager) Create(identityZone *IdentityZone) (*IdentityZone, error) {
+func (manager *IdentityZoneManager) Create(identityZone *IdentityZone) (*IdentityZone, error) {
 
-	uaaEndpoint := api.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		return nil, errors.New("UAA endpoint missing from config file")
-	}
-
-	body, err := json.Marshal(identityZone)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := api.uaaGateway.CreateResource(uaaEndpoint, "/identity-zones", bytes.NewReader(body), &identityZone); err != nil {
+	if err := manager.api.Post("/identity-zones", identityZone, &identityZone); err != nil {
 		return nil, err
 	}
 
 	return identityZone, nil
 }
 
-func (api *IdentityZoneManager) FindById(id string) (*IdentityZone, error) {
+func (manager *IdentityZoneManager) FindById(id string) (*IdentityZone, error) {
 
-	uaaEndpoint := api.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		return nil, errors.New("UAA endpoint missing from config file")
-	}
-
-	path := fmt.Sprintf("%s/identity-zones/%s", uaaEndpoint, id)
+	path := fmt.Sprintf("/identity-zones/%s", id)
 	identityZone := &IdentityZone{}
-	err := api.uaaGateway.GetResource(path, identityZone)
+	err := manager.api.Get(path, identityZone)
 	if err != nil {
 		return nil, err
 	}
@@ -64,18 +50,13 @@ func (api *IdentityZoneManager) FindById(id string) (*IdentityZone, error) {
 	return identityZone, nil
 }
 
-func (api *IdentityZoneManager) FindByName(name string) (*IdentityZone, error) {
-
-	uaaEndpoint := api.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		return nil, errors.New("UAA endpoint missing from config file")
-	}
+func (manager *IdentityZoneManager) FindByName(name string) (*IdentityZone, error) {
 
 	displayNameFilter := url.QueryEscape(fmt.Sprintf(`name Eq "%s"`, name))
-	path := fmt.Sprintf("%s/identity-zones?filter=%s", uaaEndpoint, displayNameFilter)
+	path := fmt.Sprintf("/identity-zones?filter=%s", displayNameFilter)
 
 	identityZones := &[]IdentityZone{}
-	err := api.uaaGateway.GetResource(path, identityZones)
+	err := manager.api.Get(path, identityZones)
 	if err != nil {
 		return nil, err
 	}
@@ -89,33 +70,19 @@ func (api *IdentityZoneManager) FindByName(name string) (*IdentityZone, error) {
 	return nil, errors.NewModelNotFoundError("Identity Zone", name)
 }
 
-func (api *IdentityZoneManager) Update(id string, identityZone *IdentityZone) (*IdentityZone, error) {
-
-	uaaEndpoint := api.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		return nil, errors.New("UAA endpoint missing from config file")
-	}
-
-	body, err := json.Marshal(identityZone)
-	if err != nil {
-		return nil, err
-	}
+func (manager *IdentityZoneManager) Update(id string, identityZone *IdentityZone) (*IdentityZone, error) {
 
 	path := fmt.Sprintf("/identity-zones/%s", id)
-	if err := api.uaaGateway.UpdateResource(uaaEndpoint, path, bytes.NewReader(body), &identityZone); err != nil {
+	if err := manager.api.Put(path, identityZone, &identityZone); err != nil {
 		return nil, err
 	}
 
 	return identityZone, nil
 }
 
-func (api *IdentityZoneManager) Delete(id string) error {
-	uaaEndpoint := api.config.UaaEndpoint()
-	if len(uaaEndpoint) == 0 {
-		return errors.New("UAA endpoint missing from config file")
-	}
+func (manager *IdentityZoneManager) Delete(id string) error {
 
-	return api.uaaGateway.DeleteResource(uaaEndpoint, fmt.Sprintf("/identity-zones/%s", id))
+	return manager.api.Delete(fmt.Sprintf("/identity-zones/%s", id))
 }
 
 // DTOs
