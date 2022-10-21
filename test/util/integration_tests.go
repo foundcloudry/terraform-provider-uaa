@@ -2,11 +2,11 @@ package util
 
 import (
 	"fmt"
+	"github.com/foundcloudry/terraform-provider-uaa/test"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/api"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/envvars"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jlpospisil/terraform-provider-uaa/test"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/envvars"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/provider"
 	"net"
 	"os"
 	"regexp"

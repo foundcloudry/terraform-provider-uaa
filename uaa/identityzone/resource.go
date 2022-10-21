@@ -2,9 +2,9 @@ package identityzone
 
 import (
 	"context"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
 )
 
 var Resource = &schema.Resource{

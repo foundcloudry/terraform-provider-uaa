@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/provider"
 )
 
 func main() {

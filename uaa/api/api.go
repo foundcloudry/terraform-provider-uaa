@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	apiheaders "github.com/jlpospisil/terraform-provider-uaa/uaa/api/headers"
+	apiheaders "github.com/foundcloudry/terraform-provider-uaa/uaa/api/headers"
 	"net/http"
 	"strings"
 )

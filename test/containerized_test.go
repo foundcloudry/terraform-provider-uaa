@@ -5,7 +5,7 @@ package test
 import (
 	"context"
 	"fmt"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/envvars"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/envvars"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"

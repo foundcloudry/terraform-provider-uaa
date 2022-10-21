@@ -2,10 +2,10 @@ package user
 
 import (
 	"context"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/api"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/user/fields"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/user/fields"
 )
 
 var DataSource = &schema.Resource{

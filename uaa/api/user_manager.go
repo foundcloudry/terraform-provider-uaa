@@ -4,7 +4,7 @@ import (
 	"code.cloudfoundry.org/cli/cf/net"
 	"encoding/json"
 	"fmt"
-	apiheaders "github.com/jlpospisil/terraform-provider-uaa/uaa/api/headers"
+	apiheaders "github.com/foundcloudry/terraform-provider-uaa/uaa/api/headers"
 	"net/http"
 	"net/url"
 

@@ -1,8 +1,8 @@
 package group
 
 import (
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/group/fields"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/group/fields"
 )
 
 var groupSchema = map[string]*schema.Schema{

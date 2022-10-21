@@ -2,9 +2,9 @@ package identityzone
 
 import (
 	"fmt"
+	"github.com/foundcloudry/terraform-provider-uaa/test/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/jlpospisil/terraform-provider-uaa/test/util"
 	"regexp"
 	"testing"
 )

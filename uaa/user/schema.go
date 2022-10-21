@@ -1,9 +1,9 @@
 package user
 
 import (
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/user/fields"
+	"github.com/foundcloudry/terraform-provider-uaa/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/user/fields"
-	"github.com/jlpospisil/terraform-provider-uaa/util"
 )
 
 var userSchema = map[string]*schema.Schema{

@@ -1,9 +1,9 @@
 package provider
 
 import (
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/envvars"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/provider/fields"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/envvars"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/provider/fields"
 )
 
 var Schema = map[string]*schema.Schema{

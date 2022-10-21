@@ -1,7 +1,7 @@
 package providertest
 
 import (
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/provider"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/provider"
 	"testing"
 )
 

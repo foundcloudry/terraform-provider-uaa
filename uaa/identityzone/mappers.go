@@ -1,16 +1,16 @@
 package identityzone
 
 import (
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/api"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/clientsecretpolicyfields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/corsconfigfields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/corsconfignames"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/fields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/inputpromptfields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/samlconfigfields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/samlkeyfields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/tokenpolicyfields"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/clientsecretpolicyfields"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/corsconfigfields"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/corsconfignames"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/fields"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/inputpromptfields"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/samlconfigfields"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/samlkeyfields"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone/tokenpolicyfields"
 )
 
 // Mapper methods for mapping API objects to TF resources

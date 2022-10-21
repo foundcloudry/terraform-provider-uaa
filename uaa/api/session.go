@@ -3,7 +3,7 @@ package api
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/envvars"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/envvars"
 	"io"
 	"os"
 	"strconv"

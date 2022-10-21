@@ -2,14 +2,14 @@ package provider
 
 import (
 	"context"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/api"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/client"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/group"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/provider/fields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/user"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/api"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/client"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/group"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/identityzone"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/provider/fields"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/user"
 )
 
 func Provider() *schema.Provider {

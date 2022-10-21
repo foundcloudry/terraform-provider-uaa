@@ -1,9 +1,9 @@
 package client
 
 import (
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/client/fields"
+	"github.com/foundcloudry/terraform-provider-uaa/util"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/jlpospisil/terraform-provider-uaa/uaa/client/fields"
-	"github.com/jlpospisil/terraform-provider-uaa/util"
 )
 
 var clientSchema = map[string]*schema.Schema{

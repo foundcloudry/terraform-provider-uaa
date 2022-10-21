@@ -1,4 +1,4 @@
-module github.com/jlpospisil/terraform-provider-uaa
+module github.com/foundcloudry/terraform-provider-uaa
 
 go 1.19
 
