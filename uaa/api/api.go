@@ -79,10 +79,6 @@ func (api *UaaApi) newRequest(method, path string, body any, responseBody any) e
 		bytes.NewReader(jsonBody),
 	)
 
-	//buf := new(strings.Builder)
-	//_, err = io.Copy(buf, request.HTTPReq.Body)
-	//return fmt.Errorf("***** WTF = %s", buf)
-
 	if err != nil {
 		return err
 	}

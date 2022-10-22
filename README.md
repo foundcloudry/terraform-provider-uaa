@@ -12,7 +12,7 @@ This Terraform provider plugin allows you to configure a Cloud Foundry [User Acc
     terraform {
       required_providers {
         uaa = {
-          source  = "TBD/uaa"
+          source  = "foundcloudry/uaa"
           version = "latest"
         }
       }
@@ -21,7 +21,7 @@ This Terraform provider plugin allows you to configure a Cloud Foundry [User Acc
 
 # Documentation
 
-You can find documentation at https://registry.terraform.io/providers/TBD/uaa/latest/docs
+You can find documentation at https://registry.terraform.io/providers/foundcloudry/uaa/latest/docs
 
 # Developing the Provider
 
