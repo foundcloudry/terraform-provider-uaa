@@ -21,12 +21,7 @@ data uaa_identity_zone "myzone" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the identity zone to look up
-
-## Attributes Reference
-
-The following attributes are exported:
-
+* `name` - (Required) The name of the identity zone
 * `account_chooser_enabled` - This flag enables the account choosing functionality. If set to true in the config the IDP is chosen by discovery. Otherwise, the user can enter the IDP by providing the origin.
 * [`client_secret_policy`](#client_secret_policy) - The rules that are enforced when creating/updating client secrets. Documented below.
 * [`cors_policy`](#cors_policy) - The CORS policy defined for the identity zone. Documented Below.
