@@ -40,6 +40,7 @@ The following arguments are supported:
 * `approvals_deleted` - (Optional) Were the approvals deleted for the client, and an audit event sent.
 * `required_user_groups` - (Optional) A list of group names.
 * `client_secret` - (Required if the client allows authorization_code or client_credentials grant type) A secret string used for authenticating as this client.
+* `zone_id` - (Optional) The identity zone that the client belongs to
 
 ## Attributes Reference
 
