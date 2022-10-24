@@ -4,7 +4,6 @@ import (
 	"code.cloudfoundry.org/cli/cf/configuration/coreconfig"
 	"code.cloudfoundry.org/cli/cf/errors"
 	"code.cloudfoundry.org/cli/cf/net"
-	"encoding/json"
 	"fmt"
 	"net/url"
 )
@@ -32,8 +31,6 @@ func newIdentityZoneManager(config coreconfig.Reader, gateway net.Gateway, logge
 
 func (manager *IdentityZoneManager) Create(identityZone *IdentityZone) (*IdentityZone, error) {
 
-	b, _ := json.Marshal(identityZone)
-	return nil, fmt.Errorf("WTF = %s", b)
 	if err := manager.api.Post("/identity-zones", identityZone, &identityZone); err != nil {
 		return nil, err
 	}
