@@ -154,6 +154,31 @@ var identityZoneSchema = map[string]*schema.Schema{
 }
 
 var BrandingSchema = map[string]*schema.Schema{
+	brandingfields.BannerBackgroundColor.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	brandingfields.BannerLogo.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	brandingfields.BannerText.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	brandingfields.BannerTextColor.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	brandingfields.BannerUrl.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
 	brandingfields.CompanyName.String(): {
 		Type:     schema.TypeString,
 		Optional: true,

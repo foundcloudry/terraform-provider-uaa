@@ -73,12 +73,17 @@ func mapIdentityZoneBrandingToInterface(data *api.IdentityZoneBrandingConfig) []
 	}
 
 	return []map[string]interface{}{{
-		brandingfields.CompanyName.String(): data.CompanyName,
-		brandingfields.CompanyLogo.String(): data.CompanyLogo,
-		brandingfields.Favicon.String():     data.Favicon,
-		brandingfields.FooterText.String():  data.FooterText,
-		brandingfields.FooterLinks.String(): data.Favicon,
-		brandingfields.FooterLinks.String(): mapIdentityZoneBrandingFooterLinksToInterface(data),
+		brandingfields.BannerBackgroundColor.String(): data.Banner.BackgroundColor,
+		brandingfields.BannerLogo.String():            data.Banner.Logo,
+		brandingfields.BannerText.String():            data.Banner.Text,
+		brandingfields.BannerTextColor.String():       data.Banner.TextColor,
+		brandingfields.BannerUrl.String():             data.Banner.Url,
+		brandingfields.CompanyName.String():           data.CompanyName,
+		brandingfields.CompanyLogo.String():           data.CompanyLogo,
+		brandingfields.Favicon.String():               data.Favicon,
+		brandingfields.FooterText.String():            data.FooterText,
+		brandingfields.FooterLinks.String():           data.Favicon,
+		brandingfields.FooterLinks.String():           mapIdentityZoneBrandingFooterLinksToInterface(data),
 	}}
 }
 
@@ -368,6 +373,13 @@ func mapResourceToIdentityZoneBrandingConfig(data *schema.ResourceData) *api.Ide
 	if list := getFieldAsList(data, fields.Branding.String()); len(list) == 1 {
 		branding := list[0]
 		brandingConfig := &api.IdentityZoneBrandingConfig{
+			Banner: &api.IdentityZoneBrandingBanner{
+				BackgroundColor: branding[brandingfields.BannerBackgroundColor.String()].(string),
+				Logo:            branding[brandingfields.BannerLogo.String()].(string),
+				Text:            branding[brandingfields.BannerText.String()].(string),
+				TextColor:       branding[brandingfields.BannerTextColor.String()].(string),
+				Url:             branding[brandingfields.BannerUrl.String()].(string),
+			},
 			CompanyName: branding[brandingfields.CompanyName.String()].(string),
 			CompanyLogo: branding[brandingfields.CompanyLogo.String()].(string),
 			Favicon:     branding[brandingfields.Favicon.String()].(string),
@@ -416,6 +428,14 @@ func getFieldAsList(data *schema.ResourceData, field string) []map[string]interf
 	if value, isSet := data.GetOk(field); isSet {
 		if valueAsList, canBeCast := value.([]map[string]interface{}); canBeCast {
 			return valueAsList
+		} else if valueAsList, canBeCast := value.([]interface{}); canBeCast {
+			list := make([]map[string]interface{}, len(valueAsList))
+			for i, v := range valueAsList {
+				if listItem, canCast := v.(map[string]interface{}); canCast {
+					list[i] = listItem
+				}
+			}
+			return list
 		}
 	}
 	return []map[string]interface{}{}

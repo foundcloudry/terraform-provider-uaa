@@ -4,6 +4,7 @@ import (
 	"code.cloudfoundry.org/cli/cf/configuration/coreconfig"
 	"code.cloudfoundry.org/cli/cf/errors"
 	"code.cloudfoundry.org/cli/cf/net"
+	"encoding/json"
 	"fmt"
 	"net/url"
 )
@@ -31,6 +32,8 @@ func newIdentityZoneManager(config coreconfig.Reader, gateway net.Gateway, logge
 
 func (manager *IdentityZoneManager) Create(identityZone *IdentityZone) (*IdentityZone, error) {
 
+	b, _ := json.Marshal(identityZone)
+	return nil, fmt.Errorf("WTF = %s", b)
 	if err := manager.api.Post("/identity-zones", identityZone, &identityZone); err != nil {
 		return nil, err
 	}
@@ -111,11 +114,20 @@ type IdentityZoneConfig struct {
 }
 
 type IdentityZoneBrandingConfig struct {
-	CompanyName string            `json:"companyName,omitempty"`
-	CompanyLogo string            `json:"productLogo,omitempty"`
-	Favicon     string            `json:"squareLogo,omitempty"`
-	FooterText  string            `json:"footerLegalText,omitempty"`
-	FooterLinks map[string]string `json:"footerLinks,omitempty"`
+	Banner      *IdentityZoneBrandingBanner `json:"banner,omitempty"`
+	CompanyName string                      `json:"companyName,omitempty"`
+	CompanyLogo string                      `json:"productLogo,omitempty"`
+	Favicon     string                      `json:"squareLogo,omitempty"`
+	FooterText  string                      `json:"footerLegalText,omitempty"`
+	FooterLinks map[string]string           `json:"footerLinks,omitempty"`
+}
+
+type IdentityZoneBrandingBanner struct {
+	BackgroundColor string `json:"backgroundColor,omitempty"`
+	Logo            string `json:"logo,omitempty"`
+	Text            string `json:"text,omitempty"`
+	TextColor       string `json:"textColor,omitempty"`
+	Url             string `json:"link,omitempty"`
 }
 
 type IdentityZoneClientSecretPolicy struct {
