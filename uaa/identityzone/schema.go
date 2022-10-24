@@ -110,7 +110,6 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.Branding.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
-		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: BrandingSchema,
