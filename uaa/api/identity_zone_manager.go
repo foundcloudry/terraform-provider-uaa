@@ -97,16 +97,25 @@ type IdentityZone struct {
 
 type IdentityZoneConfig struct {
 	AccountChooserEnabled bool                            `json:"accountChooserEnabled"`
+	Branding              *IdentityZoneBrandingConfig     `json:"branding,omitempty"`
 	ClientSecretPolicy    *IdentityZoneClientSecretPolicy `json:"clientSecretPolicy,omitempty"`
 	CorsPolicy            *IdentityZoneCorsPolicy         `json:"corsPolicy,omitempty"`
 	IdpDiscoveryEnabled   bool                            `json:"idpDiscoveryEnabled"`
-	InputPrompts          []*InputPrompt                  `json:"prompts,omitempty"'`
+	InputPrompts          []*InputPrompt                  `json:"prompts,omitempty"`
 	IssuerUrl             string                          `json:"issuer,omitempty"`
 	Links                 *IdentityZoneLinks              `json:"links,omitempty"`
 	MfaConfig             *MfaConfig                      `json:"MfaConfig,omitempty"`
 	TokenPolicy           *IdentityZoneTokenPolicy        `json:"tokenPolicy,omitempty"`
 	Saml                  *IdentityZoneSamlConfig         `json:"samlConfig,omitempty"`
 	UserConfig            *UserConfig                     `json:"userConfig,omitempty"`
+}
+
+type IdentityZoneBrandingConfig struct {
+	CompanyName string            `json:"companyName,omitempty"`
+	CompanyLogo string            `json:"productLogo,omitempty"`
+	Favicon     string            `json:"squareLogo,omitempty"`
+	FooterText  string            `json:"footerLegalText,omitempty"`
+	FooterLinks map[string]string `json:"footerLinks,omitempty"`
 }
 
 type IdentityZoneClientSecretPolicy struct {
@@ -175,7 +184,7 @@ type IdentityZoneLogoutLinks struct {
 type SelfServiceLinks struct {
 	Enabled          bool   `json:"selfServiceLinksEnabled"`
 	SignupUrl        string `json:"signup,omitempty"`
-	PasswordResetUrl string `json:"signup,passwd"`
+	PasswordResetUrl string `json:"passwd,omitempty"`
 }
 
 type InputPrompt struct {

@@ -1,14 +1,18 @@
 package identityzone
 
 import (
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/brandingfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/clientsecretpolicyfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/corsconfigfields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/corsconfignames"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/fields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/footerlinkfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/inputpromptfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/samlconfigfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/samlkeyfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/tokenpolicyfields"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var identityZoneSchema = map[string]*schema.Schema{
@@ -103,6 +107,15 @@ var identityZoneSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Required: true,
 	},
+	fields.Branding.String(): {
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: BrandingSchema,
+		},
+	},
 	fields.ClientSecretPolicy.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
@@ -138,6 +151,43 @@ var identityZoneSchema = map[string]*schema.Schema{
 		Elem: &schema.Resource{
 			Schema: TokenPolicySchema,
 		},
+	},
+}
+
+var BrandingSchema = map[string]*schema.Schema{
+	brandingfields.CompanyName.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	brandingfields.CompanyLogo.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	brandingfields.Favicon.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	brandingfields.FooterText.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+	},
+	brandingfields.FooterLinks.String(): {
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: FooterLinkSchema,
+		},
+	},
+}
+
+var FooterLinkSchema = map[string]*schema.Schema{
+	footerlinkfields.Name.String(): {
+		Type:     schema.TypeString,
+		Required: true,
+	},
+	footerlinkfields.Url.String(): {
+		Type:     schema.TypeString,
+		Required: true,
 	},
 }
 
@@ -304,11 +354,9 @@ var CorsPolicySchema = map[string]*schema.Schema{
 		Optional: true,
 	},
 	corsconfigfields.Name.String(): {
-		Type:     schema.TypeString,
-		Optional: true,
-		//ValidateFunc: func(i interface{}, s string) ([]string, []error) {
-		//	// TODO: ensure valid corsconfignames.CorsConfigName
-		//},
+		Type:         schema.TypeString,
+		Optional:     true,
+		ValidateFunc: validation.StringInSlice(corsconfignames.CorsConfigNames, false),
 	},
 	corsconfigfields.MaxAge.String(): {
 		Type:     schema.TypeInt,
