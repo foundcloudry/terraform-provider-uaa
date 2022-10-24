@@ -253,13 +253,19 @@ func mapResourceToIdentityZoneClientSecretPolicy(data *schema.ResourceData) *api
 
 	if list := getFieldAsList(data, fields.ClientSecretPolicy.String()); len(list) == 1 {
 		clientSecretPolicy := list[0]
+		maxLength := int64(clientSecretPolicy[clientsecretpolicyfields.MaxLength.String()].(int))
+		minLength := int64(clientSecretPolicy[clientsecretpolicyfields.MinLength.String()].(int))
+		minUpperCaseCharacter := int64(clientSecretPolicy[clientsecretpolicyfields.MinUpperCaseChars.String()].(int))
+		minLowerCaseCharacter := int64(clientSecretPolicy[clientsecretpolicyfields.MinLowerCaseChars.String()].(int))
+		minDigit := int64(clientSecretPolicy[clientsecretpolicyfields.MinDigits.String()].(int))
+		minSpecialCharacter := int64(clientSecretPolicy[clientsecretpolicyfields.MinSpecialChars.String()].(int))
 		return &api.IdentityZoneClientSecretPolicy{
-			MaxLength:             clientSecretPolicy[clientsecretpolicyfields.MaxLength.String()].(*int64),
-			MinLength:             clientSecretPolicy[clientsecretpolicyfields.MinLength.String()].(*int64),
-			MinUpperCaseCharacter: clientSecretPolicy[clientsecretpolicyfields.MinUpperCaseChars.String()].(*int64),
-			MinLowerCaseCharacter: clientSecretPolicy[clientsecretpolicyfields.MinLowerCaseChars.String()].(*int64),
-			MinDigit:              clientSecretPolicy[clientsecretpolicyfields.MinDigits.String()].(*int64),
-			MinSpecialCharacter:   clientSecretPolicy[clientsecretpolicyfields.MinSpecialChars.String()].(*int64),
+			MaxLength:             &maxLength,
+			MinLength:             &minLength,
+			MinUpperCaseCharacter: &minUpperCaseCharacter,
+			MinLowerCaseCharacter: &minLowerCaseCharacter,
+			MinDigit:              &minDigit,
+			MinSpecialCharacter:   &minSpecialCharacter,
 		}
 	}
 
