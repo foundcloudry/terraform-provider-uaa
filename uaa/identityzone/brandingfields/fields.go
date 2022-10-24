@@ -3,7 +3,12 @@ package brandingfields
 type BrandingField int64
 
 const (
-	CompanyLogo BrandingField = iota
+	BannerBackgroundColor BrandingField = iota
+	BannerLogo
+	BannerText
+	BannerTextColor
+	BannerUrl
+	CompanyLogo
 	CompanyName
 	Favicon
 	FooterLinks
@@ -12,6 +17,16 @@ const (
 
 func (s BrandingField) String() string {
 	switch s {
+	case BannerBackgroundColor:
+		return "banner_bg_color"
+	case BannerLogo:
+		return "banner_logo"
+	case BannerText:
+		return "banner_text"
+	case BannerTextColor:
+		return "banner_text_color"
+	case BannerUrl:
+		return "banner_url"
 	case CompanyLogo:
 		return "company_logo"
 	case CompanyName:

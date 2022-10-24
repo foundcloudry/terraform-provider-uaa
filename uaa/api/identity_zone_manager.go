@@ -111,11 +111,20 @@ type IdentityZoneConfig struct {
 }
 
 type IdentityZoneBrandingConfig struct {
-	CompanyName string            `json:"companyName,omitempty"`
-	CompanyLogo string            `json:"productLogo,omitempty"`
-	Favicon     string            `json:"squareLogo,omitempty"`
-	FooterText  string            `json:"footerLegalText,omitempty"`
-	FooterLinks map[string]string `json:"footerLinks,omitempty"`
+	Banner      *IdentityZoneBrandingBanner `json:"banner,omitempty"`
+	CompanyName string                      `json:"companyName,omitempty"`
+	CompanyLogo string                      `json:"productLogo,omitempty"`
+	Favicon     string                      `json:"squareLogo,omitempty"`
+	FooterText  string                      `json:"footerLegalText,omitempty"`
+	FooterLinks map[string]string           `json:"footerLinks,omitempty"`
+}
+
+type IdentityZoneBrandingBanner struct {
+	BackgroundColor string `json:"backgroundColor,omitempty"`
+	Logo            string `json:"logo,omitempty"`
+	Text            string `json:"text,omitempty"`
+	TextColor       string `json:"textColor,omitempty"`
+	Url             string `json:"link,omitempty"`
 }
 
 type IdentityZoneClientSecretPolicy struct {

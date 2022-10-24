@@ -73,12 +73,17 @@ func mapIdentityZoneBrandingToInterface(data *api.IdentityZoneBrandingConfig) []
 	}
 
 	return []map[string]interface{}{{
-		brandingfields.CompanyName.String(): data.CompanyName,
-		brandingfields.CompanyLogo.String(): data.CompanyLogo,
-		brandingfields.Favicon.String():     data.Favicon,
-		brandingfields.FooterText.String():  data.FooterText,
-		brandingfields.FooterLinks.String(): data.Favicon,
-		brandingfields.FooterLinks.String(): mapIdentityZoneBrandingFooterLinksToInterface(data),
+		brandingfields.BannerBackgroundColor.String(): data.Banner.BackgroundColor,
+		brandingfields.BannerLogo.String():            data.Banner.Logo,
+		brandingfields.BannerText.String():            data.Banner.Text,
+		brandingfields.BannerTextColor.String():       data.Banner.TextColor,
+		brandingfields.BannerUrl.String():             data.Banner.Url,
+		brandingfields.CompanyName.String():           data.CompanyName,
+		brandingfields.CompanyLogo.String():           data.CompanyLogo,
+		brandingfields.Favicon.String():               data.Favicon,
+		brandingfields.FooterText.String():            data.FooterText,
+		brandingfields.FooterLinks.String():           data.Favicon,
+		brandingfields.FooterLinks.String():           mapIdentityZoneBrandingFooterLinksToInterface(data),
 	}}
 }
 
@@ -248,31 +253,40 @@ func mapResourceToIdentityZoneClientSecretPolicy(data *schema.ResourceData) *api
 
 	if list := getFieldAsList(data, fields.ClientSecretPolicy.String()); len(list) == 1 {
 		clientSecretPolicy := list[0]
+		maxLength := int64(clientSecretPolicy[clientsecretpolicyfields.MaxLength.String()].(int))
+		minLength := int64(clientSecretPolicy[clientsecretpolicyfields.MinLength.String()].(int))
+		minUpperCaseCharacter := int64(clientSecretPolicy[clientsecretpolicyfields.MinUpperCaseChars.String()].(int))
+		minLowerCaseCharacter := int64(clientSecretPolicy[clientsecretpolicyfields.MinLowerCaseChars.String()].(int))
+		minDigit := int64(clientSecretPolicy[clientsecretpolicyfields.MinDigits.String()].(int))
+		minSpecialCharacter := int64(clientSecretPolicy[clientsecretpolicyfields.MinSpecialChars.String()].(int))
 		return &api.IdentityZoneClientSecretPolicy{
-			MaxLength:             clientSecretPolicy[clientsecretpolicyfields.MaxLength.String()].(*int64),
-			MinLength:             clientSecretPolicy[clientsecretpolicyfields.MinLength.String()].(*int64),
-			MinUpperCaseCharacter: clientSecretPolicy[clientsecretpolicyfields.MinUpperCaseChars.String()].(*int64),
-			MinLowerCaseCharacter: clientSecretPolicy[clientsecretpolicyfields.MinLowerCaseChars.String()].(*int64),
-			MinDigit:              clientSecretPolicy[clientsecretpolicyfields.MinDigits.String()].(*int64),
-			MinSpecialCharacter:   clientSecretPolicy[clientsecretpolicyfields.MinSpecialChars.String()].(*int64),
+			MaxLength:             &maxLength,
+			MinLength:             &minLength,
+			MinUpperCaseCharacter: &minUpperCaseCharacter,
+			MinLowerCaseCharacter: &minLowerCaseCharacter,
+			MinDigit:              &minDigit,
+			MinSpecialCharacter:   &minSpecialCharacter,
 		}
 	}
 
 	return nil
 }
 
-func mapResourceToIdentityZoneCorsPolicy(data *schema.ResourceData) (corsPolicy *api.IdentityZoneCorsPolicy) {
+func mapResourceToIdentityZoneCorsPolicy(data *schema.ResourceData) *api.IdentityZoneCorsPolicy {
 
 	for _, p := range getFieldAsList(data, fields.CorsPolicy.String()) {
+		corsPolicy := &api.IdentityZoneCorsPolicy{}
+
+		maxAge := int64(p[corsconfigfields.MaxAge.String()].(int))
 		policy := &api.IdentityZoneCorsConfig{
-			AllowedOrigins:        p[corsconfigfields.AllowedOrigins.String()].([]string),
-			AllowedOriginPatterns: p[corsconfigfields.AllowedOriginPatterns.String()].([]string),
-			AllowedUris:           p[corsconfigfields.AllowedUris.String()].([]string),
-			AllowedUriPatterns:    p[corsconfigfields.AllowedOriginPatterns.String()].([]string),
-			AllowedHeaders:        p[corsconfigfields.AllowedHeaders.String()].([]string),
-			AllowedMethods:        p[corsconfigfields.AllowedMethods.String()].([]string),
+			AllowedOrigins:        mapSchemaSetSetToStringSlice(p[corsconfigfields.AllowedOrigins.String()]),
+			AllowedOriginPatterns: mapSchemaSetSetToStringSlice(p[corsconfigfields.AllowedOriginPatterns.String()]),
+			AllowedUris:           mapSchemaSetSetToStringSlice(p[corsconfigfields.AllowedUris.String()]),
+			AllowedUriPatterns:    mapSchemaSetSetToStringSlice(p[corsconfigfields.AllowedUriPatterns.String()]),
+			AllowedHeaders:        mapSchemaSetSetToStringSlice(p[corsconfigfields.AllowedHeaders.String()]),
+			AllowedMethods:        mapSchemaSetSetToStringSlice(p[corsconfigfields.AllowedMethods.String()]),
 			AllowedCredentials:    p[corsconfigfields.AllowedCredentials.String()].(bool),
-			MaxAge:                p[corsconfigfields.MaxAge.String()].(*int64),
+			MaxAge:                &maxAge,
 		}
 
 		switch p[corsconfigfields.Name.String()].(string) {
@@ -281,9 +295,11 @@ func mapResourceToIdentityZoneCorsPolicy(data *schema.ResourceData) (corsPolicy 
 		case corsconfignames.Xhr.String():
 			corsPolicy.XhrConfiguration = policy
 		}
+
+		return corsPolicy
 	}
 
-	return corsPolicy
+	return nil
 }
 
 func mapResourceToIdentityZoneMfaConfig(data *schema.ResourceData) *api.MfaConfig {
@@ -317,9 +333,11 @@ func mapResourceToIdentityZoneTokenPolicy(data *schema.ResourceData) *api.Identi
 
 	if list := getFieldAsList(data, fields.TokenPolicy.String()); len(list) == 1 {
 		tokenPolicy := list[0]
+		accessTokenTtl := int64(tokenPolicy[tokenpolicyfields.AccessTokenTtl.String()].(int))
+		refreshTokenTtl := int64(tokenPolicy[tokenpolicyfields.RefreshTokenTtl.String()].(int))
 		return &api.IdentityZoneTokenPolicy{
-			AccessTokenTtl:       tokenPolicy[tokenpolicyfields.AccessTokenTtl.String()].(*int64),
-			RefreshTokenTtl:      tokenPolicy[tokenpolicyfields.RefreshTokenTtl.String()].(*int64),
+			AccessTokenTtl:       &accessTokenTtl,
+			RefreshTokenTtl:      &refreshTokenTtl,
 			IsJwtRevocable:       tokenPolicy[tokenpolicyfields.IsJwtRevocable.String()].(bool),
 			IsRefreshTokenUnique: tokenPolicy[tokenpolicyfields.IsRefreshTokenUnique.String()].(bool),
 			RefreshTokenFormat:   tokenPolicy[tokenpolicyfields.RefreshTokenFormat.String()].(string),
@@ -334,10 +352,12 @@ func mapResourceToIdentityZoneSamlConfig(data *schema.ResourceData) *api.Identit
 
 	if list := getFieldAsList(data, fields.SamlConfig.String()); len(list) == 1 {
 		samlConfig := list[0]
-		keys := samlConfig[samlconfigfields.Key.String()].([]map[string]interface{})
+		keys := samlConfig[samlconfigfields.Key.String()].([]interface{})
+
+		assertionTtlSeconds := int64(samlConfig[samlconfigfields.AssertionTtlSeconds.String()].(int))
 		return &api.IdentityZoneSamlConfig{
 			ActiveKeyId:              samlConfig[samlconfigfields.ActiveKeyId.String()].(string),
-			AssertionTtlSeconds:      samlConfig[samlconfigfields.AssertionTtlSeconds.String()].(*int64),
+			AssertionTtlSeconds:      &assertionTtlSeconds,
 			DisableInResponseToCheck: samlConfig[samlconfigfields.DisableInResponseToCheck.String()].(bool),
 			EntityId:                 samlConfig[samlconfigfields.ActiveKeyId.String()].(string),
 			IsAssertionSigned:        samlConfig[samlconfigfields.IsAssertionSigned.String()].(bool),
@@ -351,12 +371,14 @@ func mapResourceToIdentityZoneSamlConfig(data *schema.ResourceData) *api.Identit
 	return nil
 }
 
-func mapResourceToIdentityZoneSamlKeys(resourceKeys []map[string]interface{}) (keys map[string]*api.IdentityZoneSamlKey) {
+func mapResourceToIdentityZoneSamlKeys(resourceKeys []interface{}) (keys map[string]*api.IdentityZoneSamlKey) {
 
-	for _, key := range resourceKeys {
-		name := key[samlkeyfields.Name.String()].(string)
-		keys[name] = &api.IdentityZoneSamlKey{
-			Certificate: key[samlkeyfields.Certificate.String()].(string),
+	for _, k := range resourceKeys {
+		if key, ok := k.(map[string]interface{}); ok {
+			name := key[samlkeyfields.Name.String()].(string)
+			keys[name] = &api.IdentityZoneSamlKey{
+				Certificate: key[samlkeyfields.Certificate.String()].(string),
+			}
 		}
 	}
 
@@ -368,6 +390,13 @@ func mapResourceToIdentityZoneBrandingConfig(data *schema.ResourceData) *api.Ide
 	if list := getFieldAsList(data, fields.Branding.String()); len(list) == 1 {
 		branding := list[0]
 		brandingConfig := &api.IdentityZoneBrandingConfig{
+			Banner: &api.IdentityZoneBrandingBanner{
+				BackgroundColor: branding[brandingfields.BannerBackgroundColor.String()].(string),
+				Logo:            branding[brandingfields.BannerLogo.String()].(string),
+				Text:            branding[brandingfields.BannerText.String()].(string),
+				TextColor:       branding[brandingfields.BannerTextColor.String()].(string),
+				Url:             branding[brandingfields.BannerUrl.String()].(string),
+			},
 			CompanyName: branding[brandingfields.CompanyName.String()].(string),
 			CompanyLogo: branding[brandingfields.CompanyLogo.String()].(string),
 			Favicon:     branding[brandingfields.Favicon.String()].(string),
@@ -416,7 +445,25 @@ func getFieldAsList(data *schema.ResourceData, field string) []map[string]interf
 	if value, isSet := data.GetOk(field); isSet {
 		if valueAsList, canBeCast := value.([]map[string]interface{}); canBeCast {
 			return valueAsList
+		} else if valueAsList, canBeCast := value.([]interface{}); canBeCast {
+			list := make([]map[string]interface{}, len(valueAsList))
+			for i, v := range valueAsList {
+				if listItem, canCast := v.(map[string]interface{}); canCast {
+					list[i] = listItem
+				}
+			}
+			return list
 		}
 	}
 	return []map[string]interface{}{}
+}
+
+func mapSchemaSetSetToStringSlice(i interface{}) []string {
+	itemsRaw := i.(*schema.Set).List()
+	items := make([]string, len(itemsRaw))
+	for i, raw := range itemsRaw {
+		items[i] = raw.(string)
+	}
+
+	return items
 }

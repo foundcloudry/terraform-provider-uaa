@@ -97,6 +97,11 @@ The following arguments are supported:
 * `refresh_token_ttl` - Time in seconds between when a refresh token is issued and when it expires. Defaults to global `refreshTokenValidity`
 
 ### branding
+* `banner_bg_color` - Hexadecimal color code for banner background color, does not allow color namesThis name is used on the UAA Pages and in account management related communication in UAA
+* `banner_logo` - This is base64 encoded PNG data displayed in a banner at the top of the UAA login page, overrides banner text
+* `banner_text` - This is text displayed in a banner at the top of the UAA login page
+* `banner_text_color` - Hexadecimal color code for banner text color, does not allow color names
+* `banner_url` - The UAA login banner will be a link pointing to this url
 * `company_name` - This name is used on the UAA Pages and in account management related communication in UAA
 * `company_logo` - This is a base64Url encoded PNG image which will be used as the logo on all UAA pages like Login, Sign Up etc.
 * `favicon` - This is a base64 encoded PNG image which will be used as the favicon for the UAA pages

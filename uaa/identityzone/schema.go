@@ -110,7 +110,6 @@ var identityZoneSchema = map[string]*schema.Schema{
 	fields.Branding.String(): {
 		Type:     schema.TypeList,
 		Optional: true,
-		Computed: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: BrandingSchema,
@@ -155,21 +154,50 @@ var identityZoneSchema = map[string]*schema.Schema{
 }
 
 var BrandingSchema = map[string]*schema.Schema{
+	brandingfields.BannerBackgroundColor.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	brandingfields.BannerLogo.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	brandingfields.BannerText.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	brandingfields.BannerTextColor.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
+	brandingfields.BannerUrl.String(): {
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	},
 	brandingfields.CompanyName.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Computed: true,
 	},
 	brandingfields.CompanyLogo.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Computed: true,
 	},
 	brandingfields.Favicon.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Computed: true,
 	},
 	brandingfields.FooterText.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Computed: true,
 	},
 	brandingfields.FooterLinks.String(): {
 		Type:     schema.TypeSet,
