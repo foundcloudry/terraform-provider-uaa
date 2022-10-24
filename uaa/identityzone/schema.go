@@ -157,18 +157,22 @@ var BrandingSchema = map[string]*schema.Schema{
 	brandingfields.CompanyName.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Computed: true,
 	},
 	brandingfields.CompanyLogo.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Computed: true,
 	},
 	brandingfields.Favicon.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Computed: true,
 	},
 	brandingfields.FooterText.String(): {
 		Type:     schema.TypeString,
 		Optional: true,
+		Computed: true,
 	},
 	brandingfields.FooterLinks.String(): {
 		Type:     schema.TypeSet,
