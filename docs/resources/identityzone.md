@@ -14,6 +14,12 @@ The following example looks up an identity zone named 'my-zone'.
 resource uaa_identity_zone "myzone" {
     name = "my-zone"
     sub_domain = "my-zone"
+    
+    branding {
+        company_name = "My Company, LLC."
+        company_logo = "<base64 encoded logo>"
+        favicon = "<base64 encoded favicon>"
+    }
 }
 ```
 
