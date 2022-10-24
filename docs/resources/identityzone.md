@@ -24,6 +24,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the identity zone to look up
 * `sub_domain` - (Required) Unique subdomain for the running instance. May only contain legal characters for a subdomain name.
 * `account_chooser_enabled` - (Optional) This flag enables the account choosing functionality. If set to true in the config the IDP is chosen by discovery. Otherwise, the user can enter the IDP by providing the origin.
+* [`branding`](#branding) - (Optional) Branding customization details.  Documented below.
 * [`client_secret_policy`](#client_secret_policy) - (Optional) The rules that are enforced when creating/updating client secrets. Documented below.
 * [`cors_policy`](#cors_policy) - (Optional) The CORS policy defined for the identity zone. Documented Below.
 * `default_user_groups` - (Optional) Default groups each user in the zone inherits.
@@ -94,3 +95,14 @@ The following arguments are supported:
 * `is_refresh_token_unique` - If true, uaa will only issue one refresh token per client_id/user_id combination. Defaults to `false`.
 * `refresh_token_format` - The format for the refresh token. Allowed values are `jwt`, `opaque`. Defaults to `jwt`.
 * `refresh_token_ttl` - Time in seconds between when a refresh token is issued and when it expires. Defaults to global `refreshTokenValidity`
+
+### branding
+* `company_name` - This name is used on the UAA Pages and in account management related communication in UAA
+* `company_logo` - This is a base64Url encoded PNG image which will be used as the logo on all UAA pages like Login, Sign Up etc.
+* `favicon` - This is a base64 encoded PNG image which will be used as the favicon for the UAA pages
+* `footer_text` - 	This text appears on the footer of all UAA pages
+* [`footer_links`](#footer_links) - These links appear on the footer of all UAA pages. You may choose to add multiple urls for things like Support, Terms of Service etc. Documented below.
+
+### footer_links
+* `name` - The link text to be displayed.
+* `url` - The url for the href of the link displayed.

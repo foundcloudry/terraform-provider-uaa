@@ -2,10 +2,12 @@ package identityzone
 
 import (
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/api"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/brandingfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/clientsecretpolicyfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/corsconfigfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/corsconfignames"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/fields"
+	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/footerlinkfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/inputpromptfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/samlconfigfields"
 	"github.com/foundcloudry/terraform-provider-uaa/uaa/identityzone/samlkeyfields"
@@ -58,7 +60,38 @@ func MapIdentityZoneToResource(identityZone *api.IdentityZone, data *schema.Reso
 		if identityZone.Config.UserConfig != nil {
 			data.Set(fields.DefaultUserGroups.String(), &identityZone.Config.UserConfig.DefaultGroups)
 		}
+
+		if identityZone.Config.Branding != nil {
+			data.Set(fields.Branding.String(), mapIdentityZoneBrandingToInterface(identityZone.Config.Branding))
+		}
 	}
+}
+
+func mapIdentityZoneBrandingToInterface(data *api.IdentityZoneBrandingConfig) []map[string]interface{} {
+	if data == nil {
+		return nil
+	}
+
+	return []map[string]interface{}{{
+		brandingfields.CompanyName.String(): data.CompanyName,
+		brandingfields.CompanyLogo.String(): data.CompanyLogo,
+		brandingfields.Favicon.String():     data.Favicon,
+		brandingfields.FooterText.String():  data.FooterText,
+		brandingfields.FooterLinks.String(): data.Favicon,
+		brandingfields.FooterLinks.String(): mapIdentityZoneBrandingFooterLinksToInterface(data),
+	}}
+}
+
+func mapIdentityZoneBrandingFooterLinksToInterface(data *api.IdentityZoneBrandingConfig) (footerLinks []map[string]interface{}) {
+
+	for name, url := range data.FooterLinks {
+		footerLinks = append(footerLinks, map[string]interface{}{
+			footerlinkfields.Name.String(): name,
+			footerlinkfields.Url.String():  url,
+		})
+	}
+
+	return footerLinks
 }
 
 func mapIdentityZoneCorsPolicyToInterface(data *api.IdentityZoneCorsPolicy) []map[string]interface{} {
@@ -204,6 +237,9 @@ func mapResourceToIdentityZoneConfig(data *schema.ResourceData) *api.IdentityZon
 	if samlConfig := mapResourceToIdentityZoneSamlConfig(data); samlConfig != nil {
 		config.Saml = samlConfig
 	}
+	if branding := mapResourceToIdentityZoneBrandingConfig(data); branding != nil {
+		config.Branding = branding
+	}
 
 	return config
 }
@@ -325,6 +361,41 @@ func mapResourceToIdentityZoneSamlKeys(resourceKeys []map[string]interface{}) (k
 	}
 
 	return keys
+}
+
+func mapResourceToIdentityZoneBrandingConfig(data *schema.ResourceData) *api.IdentityZoneBrandingConfig {
+
+	if list := getFieldAsList(data, fields.Branding.String()); len(list) == 1 {
+		branding := list[0]
+		brandingConfig := &api.IdentityZoneBrandingConfig{
+			CompanyName: branding[brandingfields.CompanyName.String()].(string),
+			CompanyLogo: branding[brandingfields.CompanyLogo.String()].(string),
+			Favicon:     branding[brandingfields.Favicon.String()].(string),
+			FooterText:  branding[brandingfields.FooterText.String()].(string),
+		}
+
+		if links, ok := branding[brandingfields.FooterLinks.String()].(*schema.Set); ok {
+			brandingConfig.FooterLinks = mapResourceToIdentityZoneBrandingFooterLinks(links)
+		}
+
+		return brandingConfig
+	}
+
+	return nil
+}
+
+func mapResourceToIdentityZoneBrandingFooterLinks(data *schema.Set) map[string]string {
+
+	linksList := data.List()
+	footerLinks := make(map[string]string, len(linksList))
+	for _, l := range linksList {
+		if link, ok := l.(map[string]interface{}); ok {
+			name := link[footerlinkfields.Name.String()].(string)
+			footerLinks[name] = link[footerlinkfields.Url.String()].(string)
+		}
+	}
+
+	return footerLinks
 }
 
 func mapResourceToIdentityZoneUserConfig(data *schema.ResourceData) *api.UserConfig {

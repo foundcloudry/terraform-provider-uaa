@@ -4,6 +4,7 @@ type IdentityZoneField int64
 
 const (
 	AccountChooserEnabled IdentityZoneField = iota
+	Branding
 	ClientSecretPolicy
 	CorsPolicy
 	DefaultUserGroups
@@ -30,6 +31,8 @@ func (s IdentityZoneField) String() string {
 	switch s {
 	case AccountChooserEnabled:
 		return "account_chooser_enabled"
+	case Branding:
+		return "branding"
 	case ClientSecretPolicy:
 		return "client_secret_policy"
 	case CorsPolicy:

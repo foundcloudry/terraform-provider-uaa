@@ -7,6 +7,11 @@ const (
 	Xhr
 )
 
+var CorsConfigNames = []string{
+	Default.String(),
+	Xhr.String(),
+}
+
 func (s CorsConfigName) String() string {
 	switch s {
 	case Default:
