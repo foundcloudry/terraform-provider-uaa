@@ -8,7 +8,7 @@ require (
 	code.cloudfoundry.org/cli v7.1.0+incompatible
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.0
 	github.com/kr/pretty v0.3.1
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/testcontainers/testcontainers-go v0.14.0
 )
 
